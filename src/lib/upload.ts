@@ -23,7 +23,7 @@ export async function saveUpload(
     `uploads/${subfolder}/${filename}`,
     file,
     {
-      access: "public",
+      access: "private",
     }
   );
 

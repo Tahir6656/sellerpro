@@ -18,10 +18,18 @@ interface PaymentRequest {
   paymentAccount: { methodName: string };
 }
 
+const getSignedProofUrl = async (requestId: string): Promise<string | null> => {
+  const res = await fetch(`/api/admin/payments/${requestId}/screenshot`);
+  const json = await res.json();
+  if (!json.success) return null;
+  return json.data?.url || null;
+};
+
 export default function AdminPaymentsPage() {
   const { toast } = useToast();
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [selected, setSelected] = useState<PaymentRequest | null>(null);
+  const [selectedScreenshotUrl, setSelectedScreenshotUrl] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
   const fetchData = useCallback(async () => {
@@ -32,6 +40,26 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useSSE(() => fetchData());
+
+  useEffect(() => {
+    if (!selected) {
+      setSelectedScreenshotUrl(null);
+      return;
+    }
+
+    let isMounted = true;
+    getSignedProofUrl(selected.id)
+      .then((url) => {
+        if (isMounted) setSelectedScreenshotUrl(url);
+      })
+      .catch(() => {
+        if (isMounted) setSelectedScreenshotUrl(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selected]);
 
   const handleAction = async (requestId: string, action: string, rejectionReason?: string) => {
     const res = await fetch("/api/admin/payments", {
@@ -116,7 +144,13 @@ export default function AdminPaymentsPage() {
               <div><span className="text-slate-500">Amount:</span> {formatCurrency(selected.amount)}</div>
               <div><span className="text-slate-500">Method:</span> {selected.paymentAccount.methodName}</div>
             </div>
-            <img src={selected.screenshotPath} alt="Payment proof" className="w-full rounded-xl border" />
+            {selectedScreenshotUrl ? (
+              <img src={selectedScreenshotUrl} alt="Payment proof" className="w-full rounded-xl border" />
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+                Payment screenshot is not available.
+              </div>
+            )}
             {selected.status === "PENDING" && (
               <div className="space-y-3">
                 <textarea
