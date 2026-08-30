@@ -1,5 +1,4 @@
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 import { v4 as uuidv4 } from "uuid";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -12,18 +11,21 @@ export async function saveUpload(
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error("Invalid file type. Only JPEG, PNG, WebP, and GIF allowed.");
   }
+
   if (file.size > MAX_SIZE) {
     throw new Error("File too large. Maximum size is 5MB.");
   }
 
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${uuidv4()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads", subfolder);
-  await mkdir(uploadDir, { recursive: true });
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const filepath = path.join(uploadDir, filename);
-  await writeFile(filepath, buffer);
+  const blob = await put(
+    `uploads/${subfolder}/${filename}`,
+    file,
+    {
+      access: "public",
+    }
+  );
 
-  return `/uploads/${subfolder}/${filename}`;
+  return blob.url;
 }
