@@ -25,7 +25,7 @@ async function buildReferralTree(userId: string, depth = 0): Promise<TreeNode[]>
 
   const nodes: TreeNode[] = [];
   for (const ref of referrals) {
-    const verification = ref.referredVerifications[0];
+    const verification = ref.referredVerifications;
     nodes.push({
       id: ref.id,
       username: ref.username,

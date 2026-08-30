@@ -27,7 +27,7 @@ async function buildAdminTree(userId: string, depth = 0): Promise<TreeNode[]> {
 
   const nodes: TreeNode[] = [];
   for (const ref of referrals) {
-    const v = ref.referredVerifications[0];
+    const v = ref.referredVerifications;
     nodes.push({
       id: ref.id,
       username: ref.username,

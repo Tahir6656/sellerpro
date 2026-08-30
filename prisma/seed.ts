@@ -5,14 +5,14 @@ import { generateReferralCode } from "../src/lib/auth";
 const prisma = new PrismaClient();
 
 const PLANS = [
-  { name: "Basic Plan", slug: "basic", products: 10, durationDays: 3, investment: 300, statedReturn: 500, sortOrder: 1 },
-  { name: "Standard Plan", slug: "standard", products: 15, durationDays: 4, investment: 400, statedReturn: 700, sortOrder: 2 },
-  { name: "Premium Plan", slug: "premium", products: 25, durationDays: 5, investment: 500, statedReturn: 900, sortOrder: 3 },
-  { name: "Professional Plan", slug: "professional", products: 30, durationDays: 6, investment: 1000, statedReturn: 1700, sortOrder: 4 },
-  { name: "Business Plan", slug: "business", products: 35, durationDays: 7, investment: 2000, statedReturn: 3000, sortOrder: 5 },
-  { name: "Enterprise Plan", slug: "enterprise", products: 37, durationDays: 8, investment: 3000, statedReturn: 4500, sortOrder: 6 },
-  { name: "Pro-Enterprise Plan", slug: "pro-enterprise", products: 40, durationDays: 13, investment: 5000, statedReturn: 7500, sortOrder: 7 },
-  { name: "Elite Plan", slug: "elite", products: 50, durationDays: 15, investment: 7000, statedReturn: 10000, sortOrder: 8 },
+  { name: "Basic Plan", slug: "basic", products: 10, durationDays: 3, investment: 300, statedReturn: 500, sortOrder: 1, isActive: true, isVisible: true },
+  { name: "Standard Plan", slug: "standard", products: 15, durationDays: 4, investment: 400, statedReturn: 700, sortOrder: 2, isActive: true, isVisible: true },
+  { name: "Premium Plan", slug: "premium", products: 25, durationDays: 5, investment: 500, statedReturn: 900, sortOrder: 3, isActive: true, isVisible: true },
+  { name: "Professional Plan", slug: "professional", products: 30, durationDays: 6, investment: 1000, statedReturn: 1700, sortOrder: 4, isActive: true, isVisible: true },
+  { name: "Business Plan", slug: "business", products: 35, durationDays: 7, investment: 2000, statedReturn: 3000, sortOrder: 5, isActive: true, isVisible: true },
+  { name: "Enterprise Plan", slug: "enterprise", products: 37, durationDays: 8, investment: 3000, statedReturn: 4500, sortOrder: 6, isActive: true, isVisible: true },
+  { name: "Pro-Enterprise Plan", slug: "pro-enterprise", products: 40, durationDays: 13, investment: 5000, statedReturn: 7500, sortOrder: 7, isActive: true, isVisible: true },
+  { name: "Elite Plan", slug: "elite", products: 50, durationDays: 15, investment: 7000, statedReturn: 10000, sortOrder: 8, isActive: true, isVisible: true },
 ];
 
 async function main() {
