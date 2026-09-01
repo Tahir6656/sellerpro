@@ -30,6 +30,8 @@ export default function AdminPaymentsPage() {
   const [requests, setRequests] = useState<PaymentRequest[]>([]);
   const [selected, setSelected] = useState<PaymentRequest | null>(null);
   const [selectedScreenshotUrl, setSelectedScreenshotUrl] = useState<string | null>(null);
+  const [isScreenshotLoading, setIsScreenshotLoading] = useState(false);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
   const fetchData = useCallback(async () => {
@@ -44,16 +46,28 @@ export default function AdminPaymentsPage() {
   useEffect(() => {
     if (!selected) {
       setSelectedScreenshotUrl(null);
+      setIsScreenshotLoading(false);
+      setScreenshotError(null);
       return;
     }
 
     let isMounted = true;
+    setIsScreenshotLoading(true);
+    setScreenshotError(null);
+    setSelectedScreenshotUrl(null);
+
     getSignedProofUrl(selected.id)
       .then((url) => {
-        if (isMounted) setSelectedScreenshotUrl(url);
+        if (!isMounted) return;
+        setSelectedScreenshotUrl(url);
+        setIsScreenshotLoading(false);
+        setScreenshotError(url ? null : "Payment screenshot is not available.");
       })
       .catch(() => {
-        if (isMounted) setSelectedScreenshotUrl(null);
+        if (!isMounted) return;
+        setSelectedScreenshotUrl(null);
+        setIsScreenshotLoading(false);
+        setScreenshotError("Unable to load payment screenshot.");
       });
 
     return () => {
@@ -144,7 +158,15 @@ export default function AdminPaymentsPage() {
               <div><span className="text-slate-500">Amount:</span> {formatCurrency(selected.amount)}</div>
               <div><span className="text-slate-500">Method:</span> {selected.paymentAccount.methodName}</div>
             </div>
-            {selectedScreenshotUrl ? (
+            {isScreenshotLoading ? (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+                Loading payment screenshot...
+              </div>
+            ) : screenshotError ? (
+              <div className="rounded-xl border border-dashed border-red-200 bg-red-50 p-6 text-sm text-red-600">
+                {screenshotError}
+              </div>
+            ) : selectedScreenshotUrl ? (
               <img src={selectedScreenshotUrl} alt="Payment proof" className="w-full rounded-xl border" />
             ) : (
               <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">

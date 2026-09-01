@@ -11,12 +11,7 @@ export const registerSchema = z
     mobile: z
       .string()
       .regex(/^(\+92|0)?3[0-9]{9}$/, "Invalid Pakistani mobile number format"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain an uppercase letter")
-      .regex(/[a-z]/, "Password must contain a lowercase letter")
-      .regex(/[0-9]/, "Password must contain a number"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
     referralCode: z.string().optional(),
   })
@@ -43,12 +38,7 @@ export const resetPasswordSchema = z
   .object({
     code: z.string().length(6, "Verification code must be 6 digits"),
     email: z.string().email(),
-    newPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain an uppercase letter")
-      .regex(/[a-z]/, "Password must contain a lowercase letter")
-      .regex(/[0-9]/, "Password must contain a number"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -59,12 +49,7 @@ export const resetPasswordSchema = z
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1),
-    newPassword: z
-      .string()
-      .min(8)
-      .regex(/[A-Z]/)
-      .regex(/[a-z]/)
-      .regex(/[0-9]/),
+    newPassword: z.string().min(8),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {

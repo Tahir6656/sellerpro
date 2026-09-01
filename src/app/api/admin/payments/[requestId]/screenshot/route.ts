@@ -25,15 +25,24 @@ export async function GET(
       return apiError("Payment proof not found", 404);
     }
 
+    const rawPath = paymentRequest.screenshotPath;
+    const pathname = rawPath.startsWith("http")
+      ? new URL(rawPath).pathname.replace(/^\/+/, "")
+      : rawPath.replace(/^\/+/, "");
+
+    if (!pathname) {
+      return apiError("Payment proof not found", 404);
+    }
+
     const signedToken = await issueSignedToken({
-      pathname: paymentRequest.screenshotPath,
+      pathname,
       operations: ["get"],
       validUntil: Date.now() + 60 * 1000,
     });
 
     const { presignedUrl } = await presignUrl(signedToken, {
       operation: "get",
-      pathname: paymentRequest.screenshotPath,
+      pathname,
       validUntil: Date.now() + 60 * 1000,
       access: "private",
     });
