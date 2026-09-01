@@ -76,10 +76,17 @@ export async function PUT(request: NextRequest) {
             },
           });
 
-          await tx.user.update({
+          const userRecord = await tx.user.findUnique({
             where: { id: paymentRequest.userId },
-            data: { activePlanId: updated.id },
+            select: { activePlanId: true },
           });
+
+          if (!userRecord?.activePlanId) {
+            await tx.user.update({
+              where: { id: paymentRequest.userId },
+              data: { activePlanId: updated.id },
+            });
+          }
         }
 
         await tx.paymentRequest.update({

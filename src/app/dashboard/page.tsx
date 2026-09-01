@@ -25,11 +25,19 @@ interface DashboardData {
     referralCode: string;
   };
   activePlan: {
+    id: string;
     plan: { name: string; investment: number; durationDays: number; statedReturn: number };
     startDate: string;
     endDate: string;
     status: string;
   } | null;
+  activePlans: Array<{
+    id: string;
+    plan: { name: string; investment: number; durationDays: number; statedReturn: number };
+    startDate: string;
+    endDate: string;
+    status: string;
+  }>;
   pendingPlan: { plan: { name: string }; createdAt: string; status: string } | null;
   pendingPayment: { plan: { name: string }; createdAt: string } | null;
 }
@@ -169,20 +177,25 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <Card title="Active Plan">
-            {data?.activePlan ? (
+        {(data?.activePlans?.length ? data.activePlans : data?.activePlan ? [data.activePlan] : []).map((plan, index) => (
+          <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + index * 0.05 }}>
+            <Card title={plan.plan.name}>
               <div className="space-y-2 text-sm">
-                <p className="font-semibold text-lg text-blue-600">{data.activePlan.plan.name}</p>
-                <p>Investment: {formatCurrency(data.activePlan.plan.investment)}</p>
-                <p>Duration: {data.activePlan.plan.durationDays} days</p>
-                <p>Start: {formatDate(data.activePlan.startDate)}</p>
-                <p>End: {formatDate(data.activePlan.endDate)}</p>
+                <p>Investment: {formatCurrency(plan.plan.investment)}</p>
+                <p>Duration: {plan.plan.durationDays} days</p>
+                <p>Start: {formatDate(plan.startDate)}</p>
+                <p>End: {formatDate(plan.endDate)}</p>
                 <span className="inline-block px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
-                  {data.activePlan.status}
+                  {plan.status}
                 </span>
               </div>
-            ) : (
+            </Card>
+          </motion.div>
+        ))}
+
+        {!data?.activePlans?.length && !data?.activePlan && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <Card title="Active Plan">
               <div className="text-center py-4">
                 <CreditCard className="w-10 h-10 text-slate-300 mx-auto mb-2" />
                 <p className="text-slate-500 text-sm">No active plan</p>
@@ -190,9 +203,9 @@ export default function DashboardPage() {
                   <Button size="sm" className="mt-3">Browse Plans</Button>
                 </Link>
               </div>
-            )}
-          </Card>
-        </motion.div>
+            </Card>
+          </motion.div>
+        )}
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <Card title="Pending Activation">
@@ -212,8 +225,8 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {data?.activePlan && (
-        <Card title="TASK" subtitle={`Complete these tasks for your ${data.activePlan.plan.name} plan`}>
+      {(data?.activePlans?.length ? data.activePlans : data?.activePlan ? [data.activePlan] : []).map((plan) => (
+        <Card key={plan.id} title={`TASK: ${plan.plan.name}`} subtitle={`Complete these tasks for your ${plan.plan.name} plan`}>
           <div className="space-y-4">
             <div className="text-sm text-slate-700">
               <p className="font-medium mb-2">Instructions:</p>
@@ -223,8 +236,8 @@ export default function DashboardPage() {
               </ol>
             </div>
             <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-              {getTaskLinks(data.activePlan.plan.name).map((link) => (
-                <div key={link} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+              {getTaskLinks(plan.plan.name).map((link) => (
+                <div key={`${plan.id}-${link}`} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
                   <a href={link} target="_blank" rel="noreferrer" className="min-w-0 flex-1 break-all text-sm text-blue-600 hover:underline">
                     {link}
                   </a>
@@ -236,7 +249,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </Card>
-      )}
+      ))}
 
       {notifications.length > 0 && (
         <Card title="Recent Notifications" subtitle="Latest updates on your account">

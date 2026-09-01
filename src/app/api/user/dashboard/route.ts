@@ -15,7 +15,7 @@ export async function GET() {
         userPlans: {
           include: { plan: true },
           orderBy: { createdAt: "desc" },
-          take: 10,
+          take: 50,
         },
         referrer: { select: { username: true } },
       },
@@ -23,15 +23,20 @@ export async function GET() {
 
     if (!user) return apiError("User not found", 404);
 
-    if (user.activePlan) {
-      await accruePlanReturn(user.activePlan.id);
-      user.balance = (
-        await prisma.user.findUniqueOrThrow({
-          where: { id: user.id },
-          select: { balance: true },
-        })
-      ).balance;
+    const activePlans = user.userPlans.filter(
+      (plan) => plan.status === "APPROVED"
+    );
+
+    for (const activePlan of activePlans) {
+      await accruePlanReturn(activePlan.id);
     }
+
+    user.balance = (
+      await prisma.user.findUniqueOrThrow({
+        where: { id: user.id },
+        select: { balance: true },
+      })
+    ).balance;
 
     const pendingPlan = user.userPlans.find((p) => p.status === "PENDING");
     const pendingPayment = await prisma.paymentRequest.findFirst({
@@ -53,7 +58,8 @@ export async function GET() {
         referrer: user.referrer,
         registrationDate: user.registrationDate,
       },
-      activePlan: user.activePlan,
+      activePlan: activePlans[0] ?? user.activePlan,
+      activePlans,
       pendingPlan,
       pendingPayment,
     });
