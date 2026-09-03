@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
@@ -41,7 +42,32 @@ async function buildReferralTree(userId: string, depth = 0): Promise<TreeNode[]>
   return nodes;
 }
 
-export async function GET() {
+function getAppUrl(request: NextRequest): string | null {
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "");
+
+  if (configuredUrl) {
+    try {
+      const hostname = new URL(configuredUrl).hostname;
+      const isLocalhost = hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "::1";
+
+      if (!isLocalhost) return configuredUrl;
+    } catch {
+      // Fall back to the request origin when the configured URL is invalid.
+    }
+  }
+
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0].trim();
+  const host = forwardedHost || request.headers.get("host");
+  if (!host) return null;
+
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0].trim();
+  const protocol = forwardedProtocol || request.nextUrl.protocol.replace(":", "");
+  return `${protocol}://${host}`;
+}
+
+export async function GET(request: NextRequest) {
   try {
     const session = await getSessionUser();
     if (!session) return apiError("Authentication required", 401);
@@ -65,13 +91,21 @@ export async function GET() {
     });
 
     const tree = await buildReferralTree(session.id);
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = getAppUrl(request);
+
+    if (!user?.referralCode) {
+      return apiError("Referral code not available", 404);
+    }
+
+    if (!appUrl) {
+      return apiError("Public app URL could not be determined", 500);
+    }
 
     return apiSuccess({
-      referralLink: `${appUrl}/register?ref=${user?.referralCode}`,
-      referralCode: user?.referralCode,
-      referralEarnings: user?.referralEarnings,
-      directReferrals: user?.referrals,
+      referralLink: `${appUrl}/register?ref=${encodeURIComponent(user.referralCode)}`,
+      referralCode: user.referralCode,
+      referralEarnings: user.referralEarnings,
+      directReferrals: user.referrals,
       tree,
     });
   } catch (error) {
