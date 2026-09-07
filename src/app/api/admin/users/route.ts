@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 import { createAuditLog } from "@/lib/audit";
 import { getClientIp } from "@/lib/rate-limit";
+import { createTransaction } from "@/lib/transactions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,6 +66,47 @@ export async function PUT(request: NextRequest) {
 
     const ip = getClientIp(request);
     const ua = request.headers.get("user-agent") || undefined;
+
+    if (action === "adjust-balance") {
+      const amount = Number(body.amount);
+      const adjustmentReason = typeof reason === "string" ? reason.trim() : "";
+
+      if (!Number.isFinite(amount) || amount === 0) {
+        return apiError("A non-zero balance amount is required", 400);
+      }
+      if (!adjustmentReason || adjustmentReason.length > 500) {
+        return apiError("A reason up to 500 characters is required", 400);
+      }
+
+      try {
+        const transaction = await createTransaction({
+          userId,
+          type: "ADJUSTMENT",
+          amount,
+          description: `Admin balance adjustment: ${adjustmentReason}`,
+          source: admin.id,
+        });
+
+        await createAuditLog({
+          adminId: admin.id,
+          action: "USER_BALANCE_ADJUSTED",
+          targetUserId: userId,
+          previousValue: String(transaction.previousBalance),
+          newValue: `${transaction.newBalance}: ${adjustmentReason}`,
+          ipAddress: ip,
+          userAgent: ua,
+        });
+
+        return apiSuccess({
+          message: `Balance ${amount > 0 ? "added" : "removed"} successfully`,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message === "Insufficient balance") {
+          return apiError("Balance cannot be negative", 400);
+        }
+        throw error;
+      }
+    }
 
     let newStatus = user.accountStatus;
     let auditAction = action;

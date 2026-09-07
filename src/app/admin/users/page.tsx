@@ -24,6 +24,9 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [adjustmentAmounts, setAdjustmentAmounts] = useState<Record<string, string>>({});
+  const [adjustmentReasons, setAdjustmentReasons] = useState<Record<string, string>>({});
+  const [adjustingUserId, setAdjustingUserId] = useState<string | null>(null);
 
   const fetchUsers = async (q?: string) => {
     const params = q ? `?search=${encodeURIComponent(q)}` : "";
@@ -44,6 +47,35 @@ export default function AdminUsersPage() {
     const json = await res.json();
     toast(json.data?.message || json.error || "Done", json.success ? "success" : "error");
     if (json.success) fetchUsers(search);
+  };
+
+  const handleBalanceAdjustment = async (userId: string, direction: "add" | "remove") => {
+    const value = Number(adjustmentAmounts[userId]);
+    const reason = adjustmentReasons[userId]?.trim();
+    if (!Number.isFinite(value) || value <= 0 || !reason) {
+      toast("Enter a positive amount and reason", "error");
+      return;
+    }
+
+    setAdjustingUserId(userId);
+    const res = await fetch("/api/admin/users", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        action: "adjust-balance",
+        amount: direction === "add" ? value : -value,
+        reason,
+      }),
+    });
+    const json = await res.json();
+    toast(json.data?.message || json.error || "Done", json.success ? "success" : "error");
+    setAdjustingUserId(null);
+    if (json.success) {
+      setAdjustmentAmounts((current) => ({ ...current, [userId]: "" }));
+      setAdjustmentReasons((current) => ({ ...current, [userId]: "" }));
+      fetchUsers(search);
+    }
   };
 
   const formatCurrency = (n: number) =>
@@ -91,7 +123,34 @@ export default function AdminUsersPage() {
                       "bg-red-100 text-red-700"
                     }`}>{u.accountStatus}</span>
                   </td>
-                  <td className="py-3 pr-4">{formatCurrency(u.balance)}</td>
+                  <td className="py-3 pr-4 min-w-64">
+                    <p className="font-medium mb-2">{formatCurrency(u.balance)}</p>
+                    <div className="space-y-1.5">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Amount"
+                        value={adjustmentAmounts[u.id] || ""}
+                        onChange={(e) => setAdjustmentAmounts((current) => ({ ...current, [u.id]: e.target.value }))}
+                        className="!py-1.5 !px-2 text-xs"
+                      />
+                      <Input
+                        placeholder="Reason"
+                        value={adjustmentReasons[u.id] || ""}
+                        onChange={(e) => setAdjustmentReasons((current) => ({ ...current, [u.id]: e.target.value }))}
+                        className="!py-1.5 !px-2 text-xs"
+                      />
+                      <div className="flex gap-1">
+                        <Button size="sm" onClick={() => handleBalanceAdjustment(u.id, "add")} disabled={adjustingUserId === u.id}>
+                          Add
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleBalanceAdjustment(u.id, "remove")} disabled={adjustingUserId === u.id}>
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  </td>
                   <td className="py-3 pr-4">{u.activePlan?.plan.name || "—"}</td>
                   <td className="py-3 pr-4">{u._count.referrals}</td>
                   <td className="py-3">
