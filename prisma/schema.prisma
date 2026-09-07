@@ -37,6 +37,8 @@ model User {
   referrals             User[]                 @relation("Referrals")
   userPlans             UserPlan[]             @relation("UserPlans")
   withdrawalRequests    WithdrawalRequest[]
+  supportConversations  SupportConversation[]
+  supportMessages       SupportMessage[]       @relation("SupportMessageSender")
 }
 
 model Plan {
@@ -188,6 +190,30 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id])
 }
 
+model SupportConversation {
+  id        String              @id @default(cuid())
+  userId    String
+  subject   String
+  status    SupportStatus       @default(OPEN)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  user      User                @relation(fields: [userId], references: [id])
+  messages  SupportMessage[]
+}
+
+model SupportMessage {
+  id             String              @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  senderRole     UserRole
+  readByUser     Boolean             @default(false)
+  readByAdmin    Boolean             @default(false)
+  createdAt      DateTime            @default(now())
+  conversation   SupportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User                @relation("SupportMessageSender", fields: [senderId], references: [id])
+}
+
 model SystemConfig {
   id        String   @id @default(cuid())
   key       String   @unique
@@ -244,4 +270,9 @@ enum TransactionStatus {
   COMPLETED
   REJECTED
   CANCELLED
+}
+
+enum SupportStatus {
+  OPEN
+  CLOSED
 }

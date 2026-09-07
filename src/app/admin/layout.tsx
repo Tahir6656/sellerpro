@@ -17,6 +17,7 @@ import {
   Layers,
   KeyRound,
   GitBranch,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/admin/password-resets", label: "Password Resets", icon: KeyRound },
   { href: "/admin/config", label: "Configuration", icon: Settings },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: FileText },
+  { href: "/admin/support", label: "Problems", icon: MessageSquare },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

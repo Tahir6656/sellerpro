@@ -106,6 +106,7 @@ export async function middleware(request: NextRequest) {
     "/api/payments",
     "/api/withdrawals",
     "/api/notifications",
+    "/api/support",
   ];
   const isProtected = protectedUserPaths.some(
     (p) => pathname === p || pathname.startsWith(p + "/")

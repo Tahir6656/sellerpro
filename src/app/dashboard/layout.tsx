@@ -23,6 +23,7 @@ const navItems = [
   { href: "/dashboard/withdraw", label: "Withdraw", icon: Wallet },
   { href: "/dashboard/referrals", label: "Referrals", icon: Users },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/support", label: "Contact us", icon: HelpCircle },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
