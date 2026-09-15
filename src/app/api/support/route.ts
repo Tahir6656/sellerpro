@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { saveUpload } from "@/lib/upload";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 
 const messageLimit = 5000;
@@ -38,10 +39,22 @@ export async function POST(request: NextRequest) {
     const session = await getSessionUser();
     if (!session) return apiError("Authentication required", 401);
 
-    const body = await request.json();
-    const conversationId = typeof body.conversationId === "string" ? body.conversationId : undefined;
-    const subject = typeof body.subject === "string" ? body.subject.trim() : "";
-    const message = typeof body.message === "string" ? body.message.trim() : "";
+    const contentType = request.headers.get("content-type") || "";
+    const isMultipart = contentType.includes("multipart/form-data");
+
+    const formData = isMultipart ? await request.formData() : null;
+    const body = isMultipart ? null : await request.json();
+
+    const conversationId = isMultipart
+      ? (formData?.get("conversationId") as string | null)
+      : typeof body?.conversationId === "string" ? body.conversationId : undefined;
+    const subject = isMultipart
+      ? ((formData?.get("subject") as string | null) || "").trim()
+      : typeof body?.subject === "string" ? body.subject.trim() : "";
+    const message = isMultipart
+      ? ((formData?.get("message") as string | null) || "").trim()
+      : typeof body?.message === "string" ? body.message.trim() : "";
+    const screenshot = isMultipart ? (formData?.get("screenshot") as File | null) : null;
 
     if (!message || message.length > messageLimit) {
       return apiError(`Message is required and must be under ${messageLimit} characters`, 400);
@@ -49,6 +62,11 @@ export async function POST(request: NextRequest) {
 
     if (!conversationId && (!subject || subject.length > subjectLimit)) {
       return apiError(`Subject is required and must be under ${subjectLimit} characters`, 400);
+    }
+
+    let screenshotPath: string | null = null;
+    if (screenshot && screenshot.size > 0) {
+      screenshotPath = await saveUpload(screenshot, "support", "public");
     }
 
     if (conversationId) {
@@ -64,6 +82,7 @@ export async function POST(request: NextRequest) {
             senderId: session.id,
             senderRole: "USER",
             body: message,
+            screenshotPath,
           },
         }),
         prisma.supportConversation.update({
@@ -77,7 +96,12 @@ export async function POST(request: NextRequest) {
           userId: session.id,
           subject,
           messages: {
-            create: { senderId: session.id, senderRole: "USER", body: message },
+            create: {
+              senderId: session.id,
+              senderRole: "USER",
+              body: message,
+              screenshotPath,
+            },
           },
         },
       });

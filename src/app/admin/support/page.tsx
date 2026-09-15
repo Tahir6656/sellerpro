@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 interface Message {
   id: string;
   body: string;
+  screenshotPath?: string | null;
   senderRole: "USER" | "ADMIN";
   createdAt: string;
   readByAdmin: boolean;
@@ -137,27 +138,42 @@ export default function AdminSupportPage() {
         <Card title={selected ? selected.subject : "Select a user request"}>
           {selected ? (
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4 text-sm">
                 <div>
                   <p className="font-semibold text-slate-900">{selected.user.username}</p>
                   <p className="text-slate-500">{selected.user.email} · {selected.user.mobile}</p>
                 </div>
-                <Button size="sm" variant="ghost" onClick={updateStatus}>
+                <Button size="sm" variant="ghost" onClick={updateStatus} className="text-emerald-600 hover:bg-emerald-50">
                   {selected.status === "OPEN" ? "Close problem" : "Reopen problem"}
                 </Button>
               </div>
-              <div className="max-h-[420px] overflow-y-auto space-y-3 pr-1">
+
+              <div className="max-h-[430px] overflow-y-auto space-y-3 pr-1">
                 {selected.messages.map((item) => (
                   <div key={item.id} className={`flex ${item.senderRole === "ADMIN" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${item.senderRole === "ADMIN" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-800"}`}>
-                      <p className="text-xs font-semibold mb-1">{item.senderRole === "ADMIN" ? "You" : selected.user.username}</p>
-                      <p className="text-sm whitespace-pre-wrap">{item.body}</p>
-                      <p className={`text-[11px] mt-2 ${item.senderRole === "ADMIN" ? "text-emerald-100" : "text-slate-400"}`}>{formatDate(item.createdAt)}</p>
+                    <div className={`max-w-[85%] rounded-2xl border px-4 py-3 shadow-sm ${item.senderRole === "ADMIN" ? "border-emerald-200 bg-emerald-600 text-white" : "border-slate-200 bg-slate-50 text-slate-800"}`}>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] opacity-80 mb-2">
+                        {item.senderRole === "ADMIN" ? "You" : selected.user.username}
+                      </p>
+                      <p className="text-sm whitespace-pre-wrap leading-6">{item.body}</p>
+                      {item.screenshotPath ? (
+                        <a href={item.screenshotPath} target="_blank" rel="noreferrer">
+                          <img
+                            src={item.screenshotPath}
+                            alt="Problem screenshot"
+                            className="mt-3 max-h-64 w-full rounded-xl border object-cover"
+                          />
+                        </a>
+                      ) : null}
+                      <p className={`text-[11px] mt-2 ${item.senderRole === "ADMIN" ? "text-emerald-100" : "text-slate-400"}`}>
+                        {formatDate(item.createdAt)}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
-              <form onSubmit={sendReply} className="space-y-3 border-t pt-4">
+
+              <form onSubmit={sendReply} className="space-y-3 border-t border-slate-200 pt-4">
                 <textarea
                   value={reply}
                   onChange={(event) => setReply(event.target.value)}

@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 interface Message {
   id: string;
   body: string;
+  screenshotPath?: string | null;
   senderRole: "USER" | "ADMIN";
   createdAt: string;
   sender: { username: string; role: string };
@@ -29,6 +30,8 @@ export default function SupportPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
@@ -59,21 +62,35 @@ export default function SupportPage() {
 
   const selected = conversations.find((conversation) => conversation.id === selectedId);
 
+  const handleScreenshotChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setScreenshot(file);
+    setScreenshotPreview(file ? URL.createObjectURL(file) : null);
+  };
+
   const sendMessage = async (event: FormEvent) => {
     event.preventDefault();
     if (!message.trim() || (!selectedId && !subject.trim())) return;
 
     setSending(true);
+
+    const formData = new FormData();
+    if (selectedId) formData.append("conversationId", selectedId);
+    if (!selectedId) formData.append("subject", subject.trim());
+    formData.append("message", message.trim());
+    if (screenshot) formData.append("screenshot", screenshot);
+
     const response = await fetch("/api/support", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversationId: selectedId, subject, message }),
+      body: formData,
     });
     const json = await response.json();
     if (json.success) {
       toast("Message sent to the support team", "success");
       setMessage("");
       setSubject("");
+      setScreenshot(null);
+      setScreenshotPreview(null);
       await loadConversations();
     } else {
       toast(json.error || "Could not send message", "error");
@@ -123,6 +140,13 @@ export default function SupportPage() {
                     <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${item.senderRole === "USER" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-800"}`}>
                       <p className="text-xs font-semibold mb-1">{item.senderRole === "USER" ? "You" : "Support agent"}</p>
                       <p className="text-sm whitespace-pre-wrap">{item.body}</p>
+                      {item.screenshotPath ? (
+                        <img
+                          src={item.screenshotPath}
+                          alt="Support screenshot"
+                          className="mt-3 rounded-xl border border-white/20 object-cover max-h-64 w-full"
+                        />
+                      ) : null}
                       <p className={`text-[11px] mt-2 ${item.senderRole === "USER" ? "text-blue-100" : "text-slate-400"}`}>{formatDate(item.createdAt)}</p>
                     </div>
                   </div>
@@ -138,6 +162,30 @@ export default function SupportPage() {
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                   required
                 />
+
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100">
+                    <span>Attach screenshot</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleScreenshotChange} />
+                  </label>
+
+                  {screenshotPreview ? (
+                    <div className="relative w-full max-w-[180px]">
+                      <img src={screenshotPreview} alt="Preview" className="h-20 w-full rounded-xl object-cover border border-slate-200" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setScreenshot(null);
+                          setScreenshotPreview(null);
+                        }}
+                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+
                 <Button type="submit" loading={sending}>Send message</Button>
               </form>
             </div>
@@ -154,6 +202,30 @@ export default function SupportPage() {
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                 required
               />
+
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100">
+                  <span>Upload screenshot</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleScreenshotChange} />
+                </label>
+
+                {screenshotPreview ? (
+                  <div className="relative w-full max-w-[180px]">
+                    <img src={screenshotPreview} alt="Preview" className="h-20 w-full rounded-xl object-cover border border-slate-200" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setScreenshot(null);
+                        setScreenshotPreview(null);
+                      }}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs text-white"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
               <Button type="submit" loading={sending}>Send to an agent</Button>
             </form>
           )}

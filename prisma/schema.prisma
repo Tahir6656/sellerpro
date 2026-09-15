@@ -206,6 +206,7 @@ model SupportMessage {
   conversationId String
   senderId       String
   body           String
+  screenshotPath String?
   senderRole     UserRole
   readByUser     Boolean             @default(false)
   readByAdmin    Boolean             @default(false)

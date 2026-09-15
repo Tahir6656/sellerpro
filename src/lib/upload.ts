@@ -4,9 +4,12 @@ import { v4 as uuidv4 } from "uuid";
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_SIZE = 5 * 1024 * 1024;
 
+type UploadAccess = "private" | "public";
+
 export async function saveUpload(
   file: File,
-  subfolder: string
+  subfolder: string,
+  access: UploadAccess = "private"
 ): Promise<string> {
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error("Invalid file type. Only JPEG, PNG, WebP, and GIF allowed.");
@@ -23,7 +26,7 @@ export async function saveUpload(
     `uploads/${subfolder}/${filename}`,
     file,
     {
-      access: "private",
+      access,
     }
   );
 
