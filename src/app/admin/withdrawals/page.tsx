@@ -101,10 +101,10 @@ export default function AdminWithdrawalsPage() {
               ))}
             </tbody>
           </table>
-          <div className="mt-4 space-y-3 md:hidden">{requests.map((r) => <div key={r.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-900">{r.user.username}</p><p className="text-xs text-slate-500">{r.method.name} · {r.accountNumber}</p></div><span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{r.status}</span></div><p className="mt-3 text-lg font-black">{formatCurrency(r.amount)}</p><div className="mt-3 flex flex-wrap gap-2">{r.status === "PENDING" && <><Button size="sm" onClick={() => handleAction(r.id, "approve")}>Approve</Button><Button size="sm" variant="danger" onClick={() => handleAction(r.id, "reject")}>Reject</Button></>}{r.status === "APPROVED" && <Button size="sm" onClick={() => handleAction(r.id, "complete")}>Complete</Button>}</div></div>)}</div>
           <Pagination page={page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
           {!visibleRequests.length && <p className="py-10 text-center text-sm text-slate-500">No withdrawals match these filters.</p>}
         </div>
+        <div className="space-y-3 md:hidden">{requests.map((r) => <div key={r.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-900">{r.user.username}</p><p className="text-xs text-slate-500">{r.method.name} · {r.accountNumber}</p></div><span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{r.status}</span></div><p className="mt-3 text-lg font-black">{formatCurrency(r.amount)}</p><div className="mt-3 flex flex-wrap gap-2">{r.status === "PENDING" && <><Button size="sm" onClick={() => handleAction(r.id, "approve")}>Approve</Button><Button size="sm" variant="danger" onClick={() => handleAction(r.id, "reject")}>Reject</Button></>}{r.status === "APPROVED" && <Button size="sm" onClick={() => handleAction(r.id, "complete")}>Complete</Button>}</div></div>)}</div>
       </Card>
     </div>
   );
