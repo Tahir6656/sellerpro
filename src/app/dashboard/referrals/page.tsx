@@ -13,6 +13,7 @@ interface TreeNode {
   planStatus: string;
   isVerified: boolean;
   isEligible: boolean;
+  rewardPaid: boolean;
   children: TreeNode[];
 }
 
