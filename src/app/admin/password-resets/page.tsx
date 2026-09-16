@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
 
 interface ResetRequest {
   id: string;
@@ -15,6 +17,8 @@ interface ResetRequest {
 export default function AdminPasswordResetsPage() {
   const { toast } = useToast();
   const [requests, setRequests] = useState<ResetRequest[]>([]);
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const fetchData = () => {
     fetch("/api/admin/password-resets").then((r) => r.json()).then((json) => {
@@ -25,15 +29,14 @@ export default function AdminPasswordResetsPage() {
   useEffect(() => { fetchData(); }, []);
 
   const handleAction = async (requestId: string, action: string) => {
-    const rejectionReason = action === "reject" ? prompt("Rejection reason:") : undefined;
     const res = await fetch("/api/admin/password-resets", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId, action, rejectionReason }),
+      body: JSON.stringify({ requestId, action, rejectionReason: rejectionReason || undefined }),
     });
     const json = await res.json();
     toast(json.data?.message || json.error || "Done", json.success ? "success" : "error");
-    if (json.success) fetchData();
+    if (json.success) { setRejecting(null); setRejectionReason(""); fetchData(); }
   };
 
   return (
@@ -64,7 +67,7 @@ export default function AdminPasswordResetsPage() {
                     {r.status === "PENDING" && (
                       <div className="flex gap-1">
                         <Button size="sm" onClick={() => handleAction(r.id, "approve")}>Approve</Button>
-                        <Button size="sm" variant="danger" onClick={() => handleAction(r.id, "reject")}>Reject</Button>
+                        <Button size="sm" variant="danger" onClick={() => setRejecting(r.id)}>Reject</Button>
                       </div>
                     )}
                   </td>
@@ -74,6 +77,9 @@ export default function AdminPasswordResetsPage() {
           </table>
         </div>
       </Card>
+      <Modal isOpen={!!rejecting} onClose={() => setRejecting(null)} title="Reject password reset">
+        <div className="space-y-4"><Input label="Rejection reason (optional)" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} /><div className="flex gap-3"><Button variant="ghost" className="flex-1" onClick={() => setRejecting(null)}>Cancel</Button><Button variant="danger" className="flex-1" onClick={() => rejecting && handleAction(rejecting, "reject")}>Reject</Button></div></div>
+      </Modal>
     </div>
   );
 }

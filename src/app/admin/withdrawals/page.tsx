@@ -6,6 +6,8 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { useSSE } from "@/hooks/useApi";
 import Pagination from "@/components/ui/Pagination";
+import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
 
 interface WithdrawalRequest {
   id: string;
@@ -25,6 +27,8 @@ export default function AdminWithdrawalsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const [actionRequest, setActionRequest] = useState<{ id: string; action: string } | null>(null);
+  const [txReference, setTxReference] = useState("");
 
   const fetchData = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), pageSize: "20" });
@@ -39,15 +43,14 @@ export default function AdminWithdrawalsPage() {
   useSSE(() => fetchData());
 
   const handleAction = async (requestId: string, action: string) => {
-    const txReference = action === "complete" ? prompt("Transaction reference:") : undefined;
     const res = await fetch("/api/admin/withdrawals", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId, action, txReference }),
+      body: JSON.stringify({ requestId, action, txReference: txReference || undefined }),
     });
     const json = await res.json();
     toast(json.data?.message || json.error || "Done", json.success ? "success" : "error");
-    if (json.success) fetchData();
+    if (json.success) { setActionRequest(null); setTxReference(""); fetchData(); }
   };
 
   const formatCurrency = (n: number) =>
@@ -89,11 +92,11 @@ export default function AdminWithdrawalsPage() {
                       {r.status === "PENDING" && (
                         <>
                           <Button size="sm" onClick={() => handleAction(r.id, "approve")}>Approve</Button>
-                          <Button size="sm" variant="danger" onClick={() => handleAction(r.id, "reject")}>Reject</Button>
+                          <Button size="sm" variant="danger" onClick={() => setActionRequest({ id: r.id, action: "reject" })}>Reject</Button>
                         </>
                       )}
                       {r.status === "APPROVED" && (
-                        <Button size="sm" onClick={() => handleAction(r.id, "complete")}>Complete</Button>
+                        <Button size="sm" onClick={() => setActionRequest({ id: r.id, action: "complete" })}>Complete</Button>
                       )}
                     </div>
                   </td>
@@ -104,8 +107,11 @@ export default function AdminWithdrawalsPage() {
           <Pagination page={page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
           {!visibleRequests.length && <p className="py-10 text-center text-sm text-slate-500">No withdrawals match these filters.</p>}
         </div>
-        <div className="space-y-3 md:hidden">{requests.map((r) => <div key={r.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-900">{r.user.username}</p><p className="text-xs text-slate-500">{r.method.name} · {r.accountNumber}</p></div><span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{r.status}</span></div><p className="mt-3 text-lg font-black">{formatCurrency(r.amount)}</p><div className="mt-3 flex flex-wrap gap-2">{r.status === "PENDING" && <><Button size="sm" onClick={() => handleAction(r.id, "approve")}>Approve</Button><Button size="sm" variant="danger" onClick={() => handleAction(r.id, "reject")}>Reject</Button></>}{r.status === "APPROVED" && <Button size="sm" onClick={() => handleAction(r.id, "complete")}>Complete</Button>}</div></div>)}</div>
+        <div className="space-y-3 md:hidden">{requests.map((r) => <div key={r.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-900">{r.user.username}</p><p className="text-xs text-slate-500">{r.method.name} · {r.accountNumber}</p></div><span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{r.status}</span></div><p className="mt-3 text-lg font-black">{formatCurrency(r.amount)}</p><div className="mt-3 flex flex-wrap gap-2">{r.status === "PENDING" && <><Button size="sm" onClick={() => handleAction(r.id, "approve")}>Approve</Button><Button size="sm" variant="danger" onClick={() => setActionRequest({ id: r.id, action: "reject" })}>Reject</Button></>}{r.status === "APPROVED" && <Button size="sm" onClick={() => setActionRequest({ id: r.id, action: "complete" })}>Complete</Button>}</div></div>)}</div>
       </Card>
+      <Modal isOpen={!!actionRequest} onClose={() => setActionRequest(null)} title={actionRequest?.action === "complete" ? "Complete withdrawal" : "Reject withdrawal"}>
+        <div className="space-y-4"><Input label={actionRequest?.action === "complete" ? "Transaction reference" : "Reason (optional)"} value={txReference} onChange={(event) => setTxReference(event.target.value)} placeholder={actionRequest?.action === "complete" ? "Enter transfer reference" : "Add a note for the user"} /><div className="flex gap-3"><Button variant="ghost" className="flex-1" onClick={() => setActionRequest(null)}>Cancel</Button><Button className="flex-1" variant={actionRequest?.action === "reject" ? "danger" : "primary"} disabled={actionRequest?.action === "complete" && !txReference.trim()} onClick={() => actionRequest && handleAction(actionRequest.id, actionRequest.action)}>{actionRequest?.action === "complete" ? "Complete" : "Reject"}</Button></div></div>
+      </Modal>
     </div>
   );
 }
