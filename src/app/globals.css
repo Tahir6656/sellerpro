@@ -51,9 +51,9 @@ h1, h2, h3, h4, button, nav {
 .auth-bg {
   isolation: isolate;
   background:
-    radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.32), transparent 28rem),
-    radial-gradient(circle at 85% 80%, rgba(245, 185, 66, 0.15), transparent 24rem),
-    #07172d;
+    radial-gradient(circle at 15% 20%, rgba(15, 118, 110, 0.38), transparent 28rem),
+    radial-gradient(circle at 85% 80%, rgba(231, 111, 81, 0.18), transparent 24rem),
+    #10231f;
 }
 
 .auth-bg::before,
@@ -66,7 +66,7 @@ h1, h2, h3, h4, button, nav {
 }
 
 .auth-bg::before {
-  background: linear-gradient(115deg, transparent 25%, rgba(37, 99, 235, 0.1), transparent 55%);
+  background: linear-gradient(115deg, transparent 25%, rgba(15, 118, 110, 0.14), transparent 55%);
   animation: auth-drift 16s ease-in-out infinite alternate;
 }
 
@@ -90,7 +90,7 @@ h1, h2, h3, h4, button, nav {
   height: 34rem;
   left: -14rem;
   top: -12rem;
-  box-shadow: 0 0 80px rgba(37, 99, 235, 0.14), inset 0 0 80px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 80px rgba(15, 118, 110, 0.18), inset 0 0 80px rgba(15, 118, 110, 0.08);
   animation: auth-float 18s ease-in-out infinite;
 }
 
@@ -108,7 +108,7 @@ h1, h2, h3, h4, button, nav {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(rgba(147, 197, 253, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(147, 197, 253, 0.04) 1px, transparent 1px);
+  background: linear-gradient(rgba(158, 217, 203, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(158, 217, 203, 0.05) 1px, transparent 1px);
   background-size: 72px 72px;
   mask-image: radial-gradient(ellipse at center, black, transparent 72%);
 }
@@ -136,12 +136,18 @@ h1, h2, h3, h4, button, nav {
   backdrop-filter: blur(18px);
 }
 
+.transaction-chart {
+  background-image: linear-gradient(to top, rgba(15, 118, 110, 0.05) 1px, transparent 1px);
+  background-size: 100% 25%;
+}
+
 /* Dashboard */
 .dashboard-bg {
   background:
-    radial-gradient(circle at 90% 0%, rgba(37, 99, 235, 0.08), transparent 28rem),
-    #edf3f9;
-  color: #0f172a;
+    radial-gradient(circle at 90% 0%, rgba(15, 118, 110, 0.1), transparent 28rem),
+    radial-gradient(circle at 15% 85%, rgba(233, 185, 73, 0.08), transparent 22rem),
+    #f5f7f2;
+  color: var(--foreground);
 }
 
 .dashboard-header {
@@ -150,7 +156,21 @@ h1, h2, h3, h4, button, nav {
 }
 
 .dashboard-main {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 45%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), transparent 45%);
+}
+
+.dashboard-main input,
+.dashboard-main select,
+.dashboard-main textarea {
+  border-color: var(--line);
+}
+
+.dashboard-main input:focus,
+.dashboard-main select:focus,
+.dashboard-main textarea:focus {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+  outline: none;
 }
 
 .dashboard-home .dashboard-action-tile {
@@ -200,7 +220,7 @@ table {
 }
 
 thead tr {
-  background: linear-gradient(90deg, #f7faff, #eff6ff);
+  background: linear-gradient(90deg, #f3f8f4, #edf5f0);
 }
 
 thead th {
@@ -218,7 +238,27 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: #f8fbff;
+  background: #f5faf6;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand-teal);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .dashboard-main {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  table {
+    font-size: 0.8125rem;
+  }
 }
 
 textarea {

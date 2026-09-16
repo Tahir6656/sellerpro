@@ -11,11 +11,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = "", variant = "primary", size = "md", loading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-600/25",
-      secondary: "bg-[#0b1f3a] text-white hover:bg-[#102d52] shadow-md shadow-slate-900/15",
-      danger: "bg-red-600 text-white hover:bg-red-700",
-      ghost: "bg-transparent text-slate-700 hover:bg-blue-50 hover:text-blue-700",
-      outline: "border-2 border-amber-400 text-amber-600 hover:bg-amber-50",
+      primary: "bg-[var(--brand-teal)] text-white hover:bg-[#0b615b] shadow-md shadow-teal-900/20",
+      secondary: "bg-[var(--brand-ink)] text-white hover:bg-[#26352e] shadow-md shadow-slate-900/15",
+      danger: "bg-[#c9553c] text-white hover:bg-[#ab4632] shadow-md shadow-red-900/15",
+      ghost: "bg-transparent text-slate-700 hover:bg-emerald-50 hover:text-[var(--brand-teal)]",
+      outline: "border-2 border-[var(--brand-gold)] text-[#9a7213] hover:bg-amber-50",
     };
 
     const sizes = {
@@ -28,7 +28,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-teal)] focus-visible:ring-offset-2 disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
         {...props}
       >
         {loading && (
