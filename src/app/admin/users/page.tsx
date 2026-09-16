@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import Modal from "@/components/ui/Modal";
+import Pagination from "@/components/ui/Pagination";
 
 interface User {
   id: string;
@@ -30,19 +31,22 @@ export default function AdminUsersPage() {
   const [adjustingUserId, setAdjustingUserId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
   const fetchUsers = async (q?: string) => {
     const query = new URLSearchParams();
     if (q) query.set("search", q);
     if (statusFilter) query.set("status", statusFilter);
+    query.set("page", String(page));
     const params = query.toString() ? `?${query.toString()}` : "";
     const res = await fetch(`/api/admin/users${params}`);
     const json = await res.json();
-    if (json.success) setUsers(json.data);
+    if (json.success) { setUsers(json.data.items); setPagination(json.data.pagination); }
     setLoading(false);
   };
 
-  useEffect(() => { fetchUsers(); }, [statusFilter]);
+  useEffect(() => { fetchUsers(); }, [statusFilter, page]);
 
   const handleAction = async (userId: string, action: string) => {
     const res = await fetch("/api/admin/users", {
@@ -94,12 +98,12 @@ export default function AdminUsersPage() {
         <div className="flex flex-wrap gap-2">
           <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="!py-2" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter users by status" className="rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="">All statuses</option><option value="ACTIVE">Active</option><option value="FROZEN">Frozen</option><option value="DEACTIVATED">Deactivated</option></select>
-          <Button size="sm" onClick={() => fetchUsers(search)}>Search</Button>
+          <Button size="sm" onClick={() => { setPage(1); fetchUsers(search); }}>Search</Button>
         </div>
       </div>
 
       <Card>
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-slate-500">
@@ -179,7 +183,9 @@ export default function AdminUsersPage() {
               ))}
             </tbody>
           </table>
+          <div className="mt-4 space-y-3 md:hidden">{users.map((u) => <div key={u.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><button type="button" onClick={() => setSelectedUser(u)} className="font-bold text-blue-700">{u.username}</button><p className="text-xs text-slate-500">{u.email}</p><p className="text-xs text-slate-500">{u.mobile}</p></div><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{u.accountStatus}</span></div><div className="mt-3 grid grid-cols-2 gap-2 text-sm"><div><p className="text-xs text-slate-500">Balance</p><p className="font-bold">{formatCurrency(u.balance)}</p></div><div><p className="text-xs text-slate-500">Referrals</p><p className="font-bold">{u._count.referrals}</p></div></div><div className="mt-3 flex gap-2">{u.accountStatus === "FROZEN" ? <Button size="sm" onClick={() => handleAction(u.id, "unfreeze")}>Unfreeze</Button> : <Button size="sm" variant="ghost" onClick={() => handleAction(u.id, "freeze")}>Freeze</Button>}<Button size="sm" variant="danger" onClick={() => handleAction(u.id, u.accountStatus === "DEACTIVATED" ? "reactivate" : "deactivate")}>{u.accountStatus === "DEACTIVATED" ? "Reactivate" : "Deactivate"}</Button></div></div>)}</div>
           {loading && <p className="text-center py-8 text-slate-500">Loading...</p>}
+          <Pagination page={page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
         </div>
       </Card>
       <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="User details" size="md">

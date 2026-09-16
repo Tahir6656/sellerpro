@@ -10,20 +10,32 @@ import { addDays } from "date-fns";
 import { getConfig } from "@/lib/config";
 import { broadcastConfigUpdate } from "@/lib/events";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await requireAuth("ADMIN");
 
-    const requests = await prisma.paymentRequest.findMany({
+    const searchParams = new URL(request.url).searchParams;
+    const page = Math.max(1, Number(searchParams.get("page")) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number(searchParams.get("pageSize")) || 20));
+    const search = searchParams.get("search") || "";
+    const status = searchParams.get("status");
+    const where = {
+      ...(status ? { status: status as "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" } : {}),
+      ...(search ? { user: { OR: [{ username: { contains: search } }, { mobile: { contains: search } }] } } : {}),
+    };
+    const [requests, total] = await Promise.all([prisma.paymentRequest.findMany({
+      where,
       include: {
         user: { select: { id: true, username: true, mobile: true } },
         plan: true,
         paymentAccount: true,
       },
       orderBy: { createdAt: "desc" },
-    });
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }), prisma.paymentRequest.count({ where })]);
 
-    return apiSuccess(requests);
+    return apiSuccess({ items: requests, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
   } catch (error) {
     return handleApiError(error);
   }

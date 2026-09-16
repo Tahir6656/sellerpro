@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { useSSE } from "@/hooks/useApi";
+import Pagination from "@/components/ui/Pagination";
 
 interface PaymentRequest {
   id: string;
@@ -35,12 +36,17 @@ export default function AdminPaymentsPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
   const fetchData = useCallback(async () => {
-    const res = await fetch("/api/admin/payments");
+    const params = new URLSearchParams({ page: String(page), pageSize: "20" });
+    if (search) params.set("search", search);
+    if (statusFilter) params.set("status", statusFilter);
+    const res = await fetch(`/api/admin/payments?${params}`);
     const json = await res.json();
-    if (json.success) setRequests(json.data);
-  }, []);
+    if (json.success) { setRequests(json.data.items); setPagination(json.data.pagination); }
+  }, [page, search, statusFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useSSE(() => fetchData());
@@ -97,17 +103,14 @@ export default function AdminPaymentsPage() {
   const formatDate = (d: string) =>
     new Intl.DateTimeFormat("en-PK", { dateStyle: "medium", timeStyle: "short" }).format(new Date(d));
 
-  const visibleRequests = requests.filter((request) => {
-    const matchesSearch = `${request.user.username} ${request.plan.name} ${request.paymentAccount.methodName}`.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch && (!statusFilter || request.status === statusFilter);
-  });
+  const visibleRequests = requests;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--brand-teal)]">Review queue</p><h1 className="mt-1 text-2xl font-bold text-slate-900">Payment Requests</h1></div><div className="flex flex-wrap gap-2"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search user or plan" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100" /><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter payment requests by status" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="">All statuses</option><option value="PENDING">Pending</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option></select></div></div>
 
       <Card>
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-slate-500">
@@ -153,6 +156,8 @@ export default function AdminPaymentsPage() {
               ))}
             </tbody>
           </table>
+          <div className="mt-4 space-y-3 md:hidden">{requests.map((r) => <div key={r.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-bold text-slate-900">{r.user.username}</p><p className="text-xs text-slate-500">{r.plan.name} · {r.paymentAccount.methodName}</p></div><span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{r.status}</span></div><p className="mt-3 text-lg font-black">{formatCurrency(r.amount)}</p><div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="ghost" onClick={() => setSelected(r)}>View</Button>{r.status === "PENDING" && <><Button size="sm" onClick={() => handleAction(r.id, "approve")}>Approve</Button><Button size="sm" variant="danger" onClick={() => { setSelected(r); setRejectReason(""); }}>Reject</Button></>}</div></div>)}</div>
+          <Pagination page={page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
           {!visibleRequests.length && <p className="py-10 text-center text-sm text-slate-500">No payment requests match these filters.</p>}
         </div>
       </Card>

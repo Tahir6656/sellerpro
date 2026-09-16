@@ -18,6 +18,7 @@ interface Stats {
   totalReferrals: number;
   pendingPasswordResets: number;
   totalBalance: number;
+  transactionChart: { date: string; deposits: number; withdrawals: number }[];
 }
 
 export default function AdminDashboard() {
@@ -78,6 +79,10 @@ export default function AdminDashboard() {
       </div>
 
       {stats ? <div className="grid gap-5 lg:grid-cols-2">
+        <Card title="Transaction flow" subtitle="Real activity across the last 14 days">
+          <div className="flex h-48 items-end gap-1.5 border-b border-l border-slate-100 px-2 pb-1 pt-4">{stats.transactionChart.map((day) => { const max = Math.max(1, ...stats.transactionChart.flatMap((item) => [item.deposits, item.withdrawals])); return <div key={day.date} className="group flex h-full flex-1 items-end justify-center gap-0.5" title={`${day.date}: ${formatCurrency(day.deposits)} in, ${formatCurrency(day.withdrawals)} out`}><div className="w-2 rounded-t bg-[var(--brand-teal)] transition-all group-hover:opacity-75" style={{ height: `${Math.max(3, (day.deposits / max) * 100)}%` }} /><div className="w-2 rounded-t bg-[var(--brand-coral)] transition-all group-hover:opacity-75" style={{ height: `${Math.max(3, (day.withdrawals / max) * 100)}%` }} /></div>; })}</div>
+          <div className="mt-3 flex gap-4 text-xs font-semibold text-slate-500"><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-[var(--brand-teal)]" /> Inflow</span><span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-full bg-[var(--brand-coral)]" /> Outflow</span></div>
+        </Card>
         <Card title="Account health" subtitle="Current user status distribution">
           <div className="space-y-4">
             {[{ label: "Active users", value: stats.activeUsers, color: "bg-emerald-500" }, { label: "Frozen users", value: stats.frozenUsers, color: "bg-amber-500" }, { label: "Deactivated", value: stats.deactivatedUsers, color: "bg-red-500" }].map((item) => {

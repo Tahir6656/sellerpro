@@ -13,21 +13,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status");
+    const page = Math.max(1, Number(searchParams.get("page")) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number(searchParams.get("pageSize")) || 20));
+    const where = {
+      role: "USER" as const,
+      ...(search ? { OR: [{ username: { contains: search } }, { email: { contains: search } }, { mobile: { contains: search } }] } : {}),
+      ...(status ? { accountStatus: status as "ACTIVE" | "FROZEN" | "DEACTIVATED" } : {}),
+    };
 
-    const users = await prisma.user.findMany({
-      where: {
-        role: "USER",
-        ...(search
-          ? {
-              OR: [
-                { username: { contains: search } },
-                { email: { contains: search } },
-                { mobile: { contains: search } },
-              ],
-            }
-          : {}),
-        ...(status ? { accountStatus: status as "ACTIVE" | "FROZEN" | "DEACTIVATED" } : {}),
-      },
+    const [users, total] = await Promise.all([prisma.user.findMany({
+      where,
       include: {
         activePlan: { include: { plan: true } },
         referrer: { select: { username: true } },
@@ -40,10 +35,11 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 100,
-    });
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }), prisma.user.count({ where })]);
 
-    return apiSuccess(users);
+    return apiSuccess({ items: users, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) } });
   } catch (error) {
     return handleApiError(error);
   }

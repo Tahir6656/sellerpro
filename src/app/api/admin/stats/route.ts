@@ -6,6 +6,10 @@ export async function GET() {
   try {
     await requireAuth("ADMIN");
 
+    const since = new Date();
+    since.setDate(since.getDate() - 13);
+    since.setHours(0, 0, 0, 0);
+
     const [
       totalUsers,
       activeUsers,
@@ -41,6 +45,23 @@ export async function GET() {
       where: { role: "USER" },
     });
 
+    const transactions = await prisma.transaction.findMany({
+      where: { createdAt: { gte: since } },
+      select: { type: true, amount: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+    const transactionChart = Array.from({ length: 14 }, (_, index) => {
+      const date = new Date(since);
+      date.setDate(since.getDate() + index);
+      const key = date.toISOString().slice(0, 10);
+      const day = transactions.filter((transaction) => transaction.createdAt.toISOString().slice(0, 10) === key);
+      return {
+        date: key,
+        deposits: day.filter((transaction) => ["DEPOSIT", "PLAN_RETURN", "REFERRAL_REWARD"].includes(transaction.type)).reduce((sum, transaction) => sum + transaction.amount, 0),
+        withdrawals: day.filter((transaction) => transaction.type === "WITHDRAWAL").reduce((sum, transaction) => sum + transaction.amount, 0),
+      };
+    });
+
     return apiSuccess({
       totalUsers,
       activeUsers,
@@ -53,6 +74,7 @@ export async function GET() {
       totalReferrals,
       pendingPasswordResets,
       totalBalance: totalBalance._sum.balance || 0,
+      transactionChart,
     });
   } catch (error) {
     return handleApiError(error);
