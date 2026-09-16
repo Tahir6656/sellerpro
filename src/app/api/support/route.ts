@@ -91,19 +91,20 @@ export async function POST(request: NextRequest) {
         }),
       ]);
     } else {
-      await prisma.supportConversation.create({
-        data: {
-          userId: session.id,
-          subject,
-          messages: {
-            create: {
-              senderId: session.id,
-              senderRole: "USER",
-              body: message,
-              screenshotPath,
-            },
+      await prisma.$transaction(async (tx) => {
+        const conversation = await tx.supportConversation.create({
+          data: { userId: session.id, subject },
+        });
+
+        await tx.supportMessage.create({
+          data: {
+            conversationId: conversation.id,
+            senderId: session.id,
+            senderRole: "USER",
+            body: message,
+            screenshotPath,
           },
-        },
+        });
       });
     }
 
