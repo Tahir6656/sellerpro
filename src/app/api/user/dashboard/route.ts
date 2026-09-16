@@ -38,12 +38,28 @@ export async function GET() {
       })
     ).balance;
 
+    const [pendingPayment, approvedDeposits, completedWithdrawals, pendingWithdrawals] = await Promise.all([
+      prisma.paymentRequest.findFirst({
+        where: { userId: user.id, status: "PENDING" },
+        include: { plan: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.paymentRequest.aggregate({
+        where: { userId: user.id, status: "APPROVED" },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+      prisma.withdrawalRequest.aggregate({
+        where: { userId: user.id, status: "COMPLETED" },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+      prisma.withdrawalRequest.count({
+        where: { userId: user.id, status: { in: ["PENDING", "APPROVED"] } },
+      }),
+    ]);
+
     const pendingPlan = user.userPlans.find((p) => p.status === "PENDING");
-    const pendingPayment = await prisma.paymentRequest.findFirst({
-      where: { userId: user.id, status: "PENDING" },
-      include: { plan: true },
-      orderBy: { createdAt: "desc" },
-    });
 
     return apiSuccess({
       user: {
@@ -62,6 +78,14 @@ export async function GET() {
       activePlans,
       pendingPlan,
       pendingPayment,
+      summary: {
+        totalDeposits: approvedDeposits._sum.amount || 0,
+        depositCount: approvedDeposits._count._all,
+        totalWithdrawals: completedWithdrawals._sum.amount || 0,
+        withdrawalCount: completedWithdrawals._count._all,
+        pendingWithdrawals,
+        referralEarnings: user.referralEarnings,
+      },
     });
   } catch (error) {
     return handleApiError(error);

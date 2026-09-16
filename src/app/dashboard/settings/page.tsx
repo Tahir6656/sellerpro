@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowDownLeft, ArrowUpRight, LockKeyhole, ShieldCheck, UserRound } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -13,6 +14,7 @@ export default function SettingsPage() {
     planHistory: { plan: { name: string }; amount: number; status: string; createdAt: string }[];
     depositHistory: { amount: number; status: string; createdAt: string; plan: { name: string } }[];
     withdrawalHistory: { amount: number; status: string; createdAt: string; method: { name: string } }[];
+    transactions: { id: string; type: string; amount: number; status: string; description: string | null; createdAt: string }[];
   } | null>(null);
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
@@ -60,8 +62,9 @@ export default function SettingsPage() {
         <p className="mt-1 text-sm text-slate-300">Manage your account and review your account activity.</p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Personal Information">
+          <div className="mb-5 flex items-center gap-3 rounded-2xl bg-blue-50 p-4"><div className="rounded-xl bg-blue-600 p-2 text-white"><UserRound className="h-5 w-5" /></div><div><p className="font-bold text-slate-900">Account profile</p><p className="text-xs text-slate-500">Your verified account details</p></div><ShieldCheck className="ml-auto h-5 w-5 text-emerald-600" /></div>
           <div className="space-y-3 text-sm">
             <div><span className="text-slate-500">Username:</span> <strong>{profile?.user.username}</strong></div>
             <div><span className="text-slate-500">Email:</span> <strong>{profile?.user.email}</strong></div>
@@ -70,6 +73,7 @@ export default function SettingsPage() {
         </Card>
 
         <Card title="Change Password">
+          <div className="mb-4 flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800"><LockKeyhole className="h-4 w-4" /> Use a strong password you do not reuse elsewhere.</div>
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <Input label="Current Password" type="password" value={passwords.currentPassword} onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })} required />
             <Input label="New Password" type="password" value={passwords.newPassword} onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} required />
@@ -97,6 +101,13 @@ export default function SettingsPage() {
             </tbody>
           </table>
         </div>
+      </Card>
+
+      <Card title="Transaction activity" subtitle="Your recorded wallet movements and status history">
+        {profile?.transactions?.length ? <div className="space-y-2">{profile.transactions.map((transaction) => {
+          const incoming = ["DEPOSIT", "PLAN_RETURN", "REFERRAL_REWARD", "REFUND", "ADJUSTMENT"].includes(transaction.type);
+          return <div key={transaction.id} className="flex items-center gap-3 rounded-2xl border border-blue-50 bg-slate-50/70 p-3"><div className={`rounded-xl p-2 ${incoming ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"}`}>{incoming ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-800">{transaction.description || transaction.type.replaceAll("_", " ")}</p><p className="text-xs text-slate-500">{formatDate(transaction.createdAt)} · {transaction.status}</p></div><p className={`text-sm font-bold ${incoming ? "text-emerald-600" : "text-slate-800"}`}>{incoming ? "+" : "-"}{formatCurrency(transaction.amount)}</p></div>;
+        })}</div> : <p className="py-6 text-center text-sm text-slate-500">No transaction activity yet.</p>}
       </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">

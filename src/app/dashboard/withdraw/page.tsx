@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
+import { Clock3, ShieldCheck } from "lucide-react";
 
 interface WithdrawalMethod {
   id: string;
@@ -23,6 +24,7 @@ export default function WithdrawPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -34,6 +36,10 @@ export default function WithdrawPage() {
         setRequests(w.data.requests);
       }
       if (d.success) setBalance(d.data.user.balance);
+      if (!w.success || !d.success) setLoadError(w.error || d.error || "Could not load withdrawal information");
+      setLoading(false);
+    }).catch(() => {
+      setLoadError("Could not load withdrawal information. Please try again.");
       setLoading(false);
     });
   }, []);
@@ -65,14 +71,18 @@ export default function WithdrawPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-slate-500">Loading...</div>;
+  if (loading) return <div className="space-y-4"><div className="h-10 w-48 animate-pulse rounded-xl bg-slate-200" /><div className="grid gap-6 lg:grid-cols-2"><div className="h-80 animate-pulse rounded-3xl bg-white/70" /><div className="h-80 animate-pulse rounded-3xl bg-white/70" /></div></div>;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Withdraw</h1>
-        <p className="text-slate-500 mt-1">Available balance: {formatCurrency(balance)}</p>
+      <div className="rounded-3xl bg-slate-900 px-6 py-7 text-white shadow-xl shadow-slate-900/10 lg:px-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Wallet access</p>
+        <h1 className="text-3xl font-bold tracking-tight text-white">Withdraw</h1>
+        <p className="mt-1 text-sm text-slate-300">Available balance: <span className="font-bold text-white">{formatCurrency(balance)}</span></p>
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-2"><div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white p-4 shadow-sm"><Clock3 className="mt-0.5 h-5 w-5 text-blue-600" /><div><p className="font-bold text-slate-900">Processing window</p><p className="mt-1 text-sm text-slate-500">Withdrawal time is up to 2–4 hours after review.</p></div></div><div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white p-4 shadow-sm"><ShieldCheck className="mt-0.5 h-5 w-5 text-emerald-600" /><div><p className="font-bold text-slate-900">Before submitting</p><p className="mt-1 text-sm text-slate-500">Check the account details and amount carefully.</p></div></div></div>
+      {loadError && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{loadError}</div>}
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card title="Request Withdrawal">
@@ -105,7 +115,7 @@ export default function WithdrawPage() {
           ) : (
             <div className="space-y-3">
               {requests.map((r, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-sm">
+                <div key={i} className="flex items-center justify-between rounded-2xl border border-blue-50 bg-slate-50 p-3 text-sm">
                   <div>
                     <p className="font-medium">{formatCurrency(r.amount)}</p>
                     <p className="text-slate-500">{r.method.name}</p>

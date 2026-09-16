@@ -36,15 +36,26 @@ export default function PlansPage() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [accountPlanIds, setAccountPlanIds] = useState<string[]>([]);
+  const [pendingPlanIds, setPendingPlanIds] = useState<string[]>([]);
 
   const fetchData = useCallback(async () => {
-    const res = await fetch("/api/config/public");
-    const json = await res.json();
-    if (json.success) {
-      setPlans(json.data.plans);
-      setAccounts(json.data.paymentAccounts);
-    }
-    setLoading(false);
+    try {
+      const [res, dashboardRes] = await Promise.all([fetch("/api/config/public"), fetch("/api/user/dashboard")]);
+      const json = await res.json();
+      const dashboardJson = await dashboardRes.json();
+      if (json.success) {
+        setPlans(json.data.plans);
+        setAccounts(json.data.paymentAccounts);
+      } else setLoadError(json.error || "Could not load plans");
+      if (dashboardJson.success) {
+        setAccountPlanIds((dashboardJson.data.activePlans || []).map((plan: { plan: { id: string } }) => plan.plan.id));
+        setPendingPlanIds([dashboardJson.data.pendingPlan?.planId, dashboardJson.data.pendingPayment?.planId].filter(Boolean));
+      }
+    } catch {
+      setLoadError("Could not load plans. Please try again.");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -90,10 +101,11 @@ export default function PlansPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-slate-500">Loading plans...</div>;
+  if (loading) return <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[1, 2, 3, 4].map((item) => <div key={item} className="h-96 animate-pulse rounded-3xl bg-white/70" />)}</div>;
 
   return (
     <div className="space-y-8">
+      {loadError && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{loadError}</div>}
       <section className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-7 text-white shadow-xl shadow-slate-900/10 lg:px-8">
         <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -145,7 +157,7 @@ export default function PlansPage() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{plan.durationDays}-day plan</p>
                   <h3 className="mt-1 text-xl font-bold text-slate-900">{plan.name}</h3>
                 </div>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-bold text-emerald-700">+{getReturnRate(plan)}%</span>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${accountPlanIds.includes(plan.id) ? "bg-emerald-50 text-emerald-700" : pendingPlanIds.includes(plan.id) ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{accountPlanIds.includes(plan.id) ? "Active" : pendingPlanIds.includes(plan.id) ? "Pending" : `+${getReturnRate(plan)}%`}</span>
               </div>
 
               <div className="mt-6 border-b border-slate-100 pb-5">
@@ -160,8 +172,8 @@ export default function PlansPage() {
                 <li className="flex items-center gap-3"><span className="rounded-lg bg-emerald-50 p-1.5 text-emerald-600"><CheckCircle className="h-4 w-4" /></span><span><strong>{formatCurrency(plan.statedReturn - plan.investment)}</strong> projected gain</span></li>
               </ul>
             </div>
-            <Button className="mt-auto w-full" size="sm" onClick={() => setSelectedPlan(plan)}>
-              Activate plan <ArrowUpRight className="h-4 w-4" />
+            <Button className="mt-auto w-full" size="sm" onClick={() => setSelectedPlan(plan)} disabled={accountPlanIds.includes(plan.id) || pendingPlanIds.includes(plan.id)}>
+              {accountPlanIds.includes(plan.id) ? "Plan active" : pendingPlanIds.includes(plan.id) ? "Awaiting review" : "Activate plan"} {!accountPlanIds.includes(plan.id) && !pendingPlanIds.includes(plan.id) && <ArrowUpRight className="h-4 w-4" />}
             </Button>
           </Card>
         ))}
