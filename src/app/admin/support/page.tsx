@@ -157,9 +157,9 @@ export default function AdminSupportPage() {
                       </p>
                       <p className="text-sm whitespace-pre-wrap leading-6">{item.body}</p>
                       {item.screenshotPath ? (
-                        <a href={item.screenshotPath} target="_blank" rel="noreferrer">
+                        <a href={`/api/support/messages/${item.id}/screenshot`} target="_blank" rel="noreferrer">
                           <img
-                            src={item.screenshotPath}
+                            src={`/api/support/messages/${item.id}/screenshot`}
                             alt="Problem screenshot"
                             className="mt-3 max-h-64 w-full rounded-xl border object-cover"
                           />

@@ -170,7 +170,7 @@ export default function SupportPage() {
                         <div className={`rounded-2xl px-4 py-3 shadow-sm ${isUser ? "rounded-br-md bg-blue-600 text-white" : "rounded-bl-md border border-blue-100 bg-white text-slate-800"}`}>
                           <p className={`mb-1 text-[11px] font-semibold uppercase tracking-wider ${isUser ? "text-blue-100" : "text-blue-600"}`}>{isUser ? "You" : "Help Center"}</p>
                           <p className="whitespace-pre-wrap text-sm leading-6">{item.body}</p>
-                          {item.screenshotPath && <img src={item.screenshotPath} alt="Attached support image" className="mt-3 max-h-72 w-full rounded-xl border border-white/20 object-cover" />}
+                          {item.screenshotPath && <img src={`/api/support/messages/${item.id}/screenshot`} alt="Attached support image" className="mt-3 max-h-72 w-full rounded-xl border border-white/20 object-cover" />}
                         </div>
                         <p className={`mt-1 flex items-center gap-1 px-1 text-[10px] text-slate-400 ${isUser ? "justify-end" : ""}`}>{formatDate(item.createdAt)} {isUser && <CheckCheck className="h-3 w-3 text-blue-500" />}</p>
                       </div>

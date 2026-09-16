@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     let screenshotPath: string | null = null;
     if (screenshot && screenshot.size > 0) {
-      screenshotPath = await saveUpload(screenshot, "support", "public");
+      screenshotPath = await saveUpload(screenshot, "support");
     }
 
     if (conversationId) {
