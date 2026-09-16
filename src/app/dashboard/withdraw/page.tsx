@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { Clock3, ShieldCheck } from "lucide-react";
+import EmptyState from "@/components/ui/EmptyState";
 
 interface WithdrawalMethod {
   id: string;
@@ -116,7 +117,7 @@ export default function WithdrawPage() {
 
         <Card title="Withdrawal History">
           {requests.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8">No withdrawal history</p>
+            <EmptyState title="No withdrawals yet" description="Completed and pending payout requests will appear here." icon={<Clock3 className="h-5 w-5" />} />
           ) : (
             <div className="space-y-3">
               {requests.map((r, i) => (

@@ -6,6 +6,8 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
+import EmptyState from "@/components/ui/EmptyState";
+import { Layers } from "lucide-react";
 
 interface Plan {
   id: string;
@@ -94,6 +96,7 @@ export default function AdminPlansPage() {
               ))}
             </tbody>
           </table>
+          {!plans.length && <EmptyState title="No plans yet" description="Create the first selling plan to make it available to users." icon={<Layers className="h-5 w-5" />} action={<Button size="sm" onClick={() => setEditing({ ...emptyPlan })}>Add plan</Button>} />}
         </div>
       </Card>
 

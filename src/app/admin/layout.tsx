@@ -37,6 +37,7 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const currentPage = navItems.find((item) => item.href === pathname)?.label || "Admin workspace";
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -98,10 +99,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       <div className="flex-1 lg:ml-64">
-        <header className="dashboard-header sticky top-0 z-20 px-4 lg:px-8 py-4">
-          <button className="lg:hidden rounded-lg p-2 text-slate-200 hover:bg-white/10" onClick={() => setMobileOpen(true)}>
+        <header className="dashboard-header sticky top-0 z-20 flex items-center gap-4 px-4 py-3 lg:px-8 lg:py-4">
+          <button aria-label="Open admin navigation" className="rounded-lg p-2 text-slate-200 hover:bg-white/10 lg:hidden" onClick={() => setMobileOpen(true)}>
             <Menu className="w-6 h-6" />
           </button>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">SellerPro admin</p><p className="text-sm font-bold text-white">{currentPage}</p></div>
         </header>
         <main className="dashboard-main min-h-[calc(100vh-73px)] p-4 lg:p-8">{children}</main>
       </div>
