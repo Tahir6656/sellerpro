@@ -51,7 +51,7 @@ export default function WithdrawPage() {
       });
       const json = await res.json();
       if (json.success) {
-        toast("Withdrawal request submitted. Please wait for verification.", "success");
+        toast("Withdrawal time is up to 2–4 hours. If you do not receive it within this time, please contact us through the Help Center. Thank you.", "success");
         setConfirmOpen(false);
         setForm({ methodId: "", accountNumber: "", accountHolder: "", amount: "" });
         window.location.reload();
