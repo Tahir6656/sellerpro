@@ -1,23 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #edf3f9;
-  --foreground: #0f172a;
-  --brand-navy: #0b1f3a;
-  --brand-blue: #2563eb;
-  --brand-amber: #f5b942;
+  --background: #f5f7f2;
+  --foreground: #17211d;
+  --brand-ink: #17211d;
+  --brand-teal: #0f766e;
+  --brand-coral: #e76f51;
+  --brand-gold: #e9b949;
+  --surface: #ffffff;
+  --line: #dce6df;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+}
+
+h1, h2, h3, h4, button, nav {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+.skeleton {
+  background: linear-gradient(100deg, #e5ece7 20%, #f7faf8 40%, #e5ece7 60%);
+  background-size: 200% 100%;
+  border-radius: 1rem;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.landing-bg {
+  background:
+    radial-gradient(circle at 84% 12%, rgba(233, 185, 73, 0.2), transparent 22rem),
+    radial-gradient(circle at 12% 48%, rgba(15, 118, 110, 0.13), transparent 24rem),
+    #f5f7f2;
+}
+
+.landing-grid {
+  background-image: linear-gradient(rgba(23, 33, 29, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(23, 33, 29, 0.045) 1px, transparent 1px);
+  background-size: 34px 34px;
 }
 
 /* Auth pages */
@@ -234,10 +261,19 @@ textarea:focus {
   50% { transform: translate3d(18px, -14px, 0) rotate(8deg); }
 }
 
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-bg::before,
   .auth-orbit-one,
   .auth-orbit-two {
+    animation: none;
+  }
+
+  .skeleton {
     animation: none;
   }
 }

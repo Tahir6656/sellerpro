@@ -25,6 +25,7 @@ import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Link from "next/link";
 import { useSSE } from "@/hooks/useApi";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 
 interface DashboardData {
   user: {
@@ -168,7 +169,7 @@ export default function DashboardPage() {
   ];
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-slate-500">Loading dashboard...</div>;
+    return <PageSkeleton />;
   }
 
   return (

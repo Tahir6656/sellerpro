@@ -47,6 +47,11 @@ export default function WithdrawPage() {
   const formatCurrency = (n: number) =>
     new Intl.NumberFormat("en-PK", { style: "currency", currency: "PKR", maximumFractionDigits: 0 }).format(n);
 
+  const selectedMethod = methods.find((method) => method.id === form.methodId);
+  const minimumAmount = selectedMethod?.minAmount || 300;
+  const amountValue = Number(form.amount);
+  const amountValid = Number.isFinite(amountValue) && amountValue >= minimumAmount && amountValue <= balance;
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -102,8 +107,8 @@ export default function WithdrawPage() {
             </div>
             <Input label="Account/Mobile Number" value={form.accountNumber} onChange={(e) => setForm({ ...form, accountNumber: e.target.value })} />
             <Input label="Account Holder Name" value={form.accountHolder} onChange={(e) => setForm({ ...form, accountHolder: e.target.value })} />
-            <Input label="Amount" type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-            <Button className="w-full" onClick={() => setConfirmOpen(true)} disabled={!form.methodId || !form.amount}>
+            <Input label={`Amount (Minimum ${formatCurrency(minimumAmount)})`} type="number" min={minimumAmount} max={balance} value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} error={form.amount && !amountValid ? `Enter between ${formatCurrency(minimumAmount)} and your available balance.` : undefined} />
+            <Button className="w-full" onClick={() => setConfirmOpen(true)} disabled={!form.methodId || !form.amount || !amountValid}>
               Submit Withdrawal
             </Button>
           </div>

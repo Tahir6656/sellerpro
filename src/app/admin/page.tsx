@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Users, CreditCard, Wallet, Layers, GitBranch, KeyRound } from "lucide-react";
 import Card from "@/components/ui/Card";
 import { useSSE } from "@/hooks/useApi";
+import Skeleton from "@/components/ui/Skeleton";
 
 interface Stats {
   totalUsers: number;
@@ -75,6 +76,20 @@ export default function AdminDashboard() {
           );
         })}
       </div>
+
+      {stats ? <div className="grid gap-5 lg:grid-cols-2">
+        <Card title="Account health" subtitle="Current user status distribution">
+          <div className="space-y-4">
+            {[{ label: "Active users", value: stats.activeUsers, color: "bg-emerald-500" }, { label: "Frozen users", value: stats.frozenUsers, color: "bg-amber-500" }, { label: "Deactivated", value: stats.deactivatedUsers, color: "bg-red-500" }].map((item) => {
+              const width = stats.totalUsers ? Math.max(4, (item.value / stats.totalUsers) * 100) : 4;
+              return <div key={item.label}><div className="mb-1.5 flex justify-between text-sm"><span className="font-semibold text-slate-700">{item.label}</span><span className="font-bold text-slate-900">{item.value}</span></div><div className="h-2.5 rounded-full bg-slate-100"><div className={`h-full rounded-full ${item.color}`} style={{ width: `${width}%` }} /></div></div>;
+            })}
+          </div>
+        </Card>
+        <Card title="Work queue" subtitle="Items that need attention">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[{ label: "Payments", value: stats.pendingDeposits, color: "text-blue-700 bg-blue-50" }, { label: "Withdrawals", value: stats.pendingWithdrawals, color: "text-orange-700 bg-orange-50" }, { label: "Plans", value: stats.pendingPlans, color: "text-cyan-700 bg-cyan-50" }, { label: "Resets", value: stats.pendingPasswordResets, color: "text-fuchsia-700 bg-fuchsia-50" }].map((item) => <div key={item.label} className={`rounded-2xl p-4 ${item.color}`}><p className="text-2xl font-black">{item.value}</p><p className="mt-1 text-xs font-bold uppercase tracking-wide opacity-75">{item.label}</p></div>)}</div>
+        </Card>
+      </div> : <div className="grid gap-5 lg:grid-cols-2"><Skeleton className="h-64" /><Skeleton className="h-64" /></div>}
     </div>
   );
 }
