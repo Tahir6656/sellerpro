@@ -100,7 +100,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
         </header>
-        <main className="dashboard-main min-h-[calc(100vh-73px)] p-4 lg:p-8">{children}</main>
+        <main className="dashboard-main min-h-[calc(100vh-73px)] p-3 pb-24 sm:p-5 sm:pb-24 lg:p-8 lg:pb-8">{children}</main>
+        <nav className="dashboard-mobile-nav fixed inset-x-3 bottom-3 z-30 flex items-center justify-around rounded-3xl border border-white/80 bg-white/90 p-2 shadow-xl shadow-slate-900/15 backdrop-blur-xl lg:hidden">
+          {navItems.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.href;
+            return (
+              <Link key={item.href} href={item.href} className={`flex min-w-14 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold transition ${active ? "bg-blue-600 text-white shadow-md shadow-blue-600/20" : "text-slate-500 hover:bg-blue-50 hover:text-blue-600"}`}>
+                <Icon className="h-4 w-4" />
+                {item.label === "Dashboard" ? "Home" : item.label}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );

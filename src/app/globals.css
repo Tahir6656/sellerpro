@@ -126,6 +126,47 @@ body {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 45%);
 }
 
+.dashboard-home .dashboard-action-tile {
+  display: flex;
+  min-height: 116px;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 1.5rem;
+  padding: 1rem;
+  color: white;
+  box-shadow: 0 12px 24px rgba(37, 46, 110, 0.14);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.dashboard-home .dashboard-action-tile:hover {
+  filter: saturate(1.08);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 30px rgba(37, 46, 110, 0.2);
+}
+
+.dashboard-home .dashboard-action-tile svg {
+  height: 1.35rem;
+  width: 1.35rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 0.25rem;
+  box-sizing: content-box;
+}
+
+.dashboard-home .dashboard-action-tile span {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.dashboard-home .dashboard-action-tile small {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.7rem;
+}
+
+.dashboard-mobile-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
 table {
   border-collapse: separate;
   border-spacing: 0;
