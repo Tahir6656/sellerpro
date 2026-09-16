@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -34,7 +34,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
-  const fetchUsers = async (q?: string) => {
+  const fetchUsers = useCallback(async (q?: string) => {
     const query = new URLSearchParams();
     if (q) query.set("search", q);
     if (statusFilter) query.set("status", statusFilter);
@@ -44,9 +44,12 @@ export default function AdminUsersPage() {
     const json = await res.json();
     if (json.success) { setUsers(json.data.items); setPagination(json.data.pagination); }
     setLoading(false);
-  };
+  }, [page, statusFilter]);
 
-  useEffect(() => { fetchUsers(); }, [statusFilter, page]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void fetchUsers(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchUsers]);
 
   const handleAction = async (userId: string, action: string) => {
     const res = await fetch("/api/admin/users", {
@@ -186,7 +189,7 @@ export default function AdminUsersPage() {
           {loading && <p className="text-center py-8 text-slate-500">Loading...</p>}
           <Pagination page={page} totalPages={pagination.totalPages} total={pagination.total} onPageChange={setPage} />
         </div>
-        <div className="space-y-3 md:hidden">{users.map((u) => <div key={u.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><button type="button" onClick={() => setSelectedUser(u)} className="font-bold text-blue-700">{u.username}</button><p className="text-xs text-slate-500">{u.email}</p><p className="text-xs text-slate-500">{u.mobile}</p></div><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{u.accountStatus}</span></div><div className="mt-3 grid grid-cols-2 gap-2 text-sm"><div><p className="text-xs text-slate-500">Balance</p><p className="font-bold">{formatCurrency(u.balance)}</p></div><div><p className="text-xs text-slate-500">Referrals</p><p className="font-bold">{u._count.referrals}</p></div></div><div className="mt-3 flex gap-2">{u.accountStatus === "FROZEN" ? <Button size="sm" onClick={() => handleAction(u.id, "unfreeze")}>Unfreeze</Button> : <Button size="sm" variant="ghost" onClick={() => handleAction(u.id, "freeze")}>Freeze</Button>}<Button size="sm" variant="danger" onClick={() => handleAction(u.id, u.accountStatus === "DEACTIVATED" ? "reactivate" : "deactivate")}>{u.accountStatus === "DEACTIVATED" ? "Reactivate" : "Deactivate"}</Button></div></div>)}</div>
+        <div className="space-y-3 md:hidden">{users.map((u) => <div key={u.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><button type="button" onClick={() => setSelectedUser(u)} className="font-bold text-blue-700">{u.username}</button><p className="text-xs text-slate-500">{u.email}</p><p className="text-xs text-slate-500">{u.mobile}</p></div><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{u.accountStatus}</span></div><div className="mt-3 grid grid-cols-2 gap-2 text-sm"><div><p className="text-xs text-slate-500">Balance</p><p className="font-bold">{formatCurrency(u.balance)}</p></div><div><p className="text-xs text-slate-500">Referrals</p><p className="font-bold">{u._count.referrals}</p></div></div><div className="mt-3 space-y-2 rounded-xl border border-slate-200 bg-white p-3"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Adjust balance</p><Input type="number" min="0" step="0.01" placeholder="Amount" value={adjustmentAmounts[u.id] || ""} onChange={(e) => setAdjustmentAmounts((current) => ({ ...current, [u.id]: e.target.value }))} className="!py-1.5 !px-2 text-xs" /><Input placeholder="Reason" value={adjustmentReasons[u.id] || ""} onChange={(e) => setAdjustmentReasons((current) => ({ ...current, [u.id]: e.target.value }))} className="!py-1.5 !px-2 text-xs" /><div className="flex gap-2"><Button size="sm" onClick={() => handleBalanceAdjustment(u.id, "add")} disabled={adjustingUserId === u.id}>Add balance</Button><Button size="sm" variant="ghost" onClick={() => handleBalanceAdjustment(u.id, "remove")} disabled={adjustingUserId === u.id}>Remove</Button></div></div><div className="mt-3 flex gap-2">{u.accountStatus === "FROZEN" ? <Button size="sm" onClick={() => handleAction(u.id, "unfreeze")}>Unfreeze</Button> : <Button size="sm" variant="ghost" onClick={() => handleAction(u.id, "freeze")}>Freeze</Button>}<Button size="sm" variant="danger" onClick={() => handleAction(u.id, u.accountStatus === "DEACTIVATED" ? "reactivate" : "deactivate")}>{u.accountStatus === "DEACTIVATED" ? "Reactivate" : "Deactivate"}</Button></div></div>)}</div>
       </Card>
       <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="User details" size="md">
         {selectedUser && <div className="space-y-4 text-sm"><div className="flex items-center gap-3 rounded-2xl bg-blue-50 p-4"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-lg font-bold text-white">{selectedUser.username.slice(0, 1).toUpperCase()}</div><div><p className="text-lg font-bold text-slate-900">{selectedUser.username}</p><p className="text-slate-500">{selectedUser.accountStatus}</p></div></div><div className="grid grid-cols-2 gap-3"><div><p className="text-xs text-slate-500">Email</p><p className="font-medium">{selectedUser.email}</p></div><div><p className="text-xs text-slate-500">Mobile</p><p className="font-medium">{selectedUser.mobile}</p></div><div><p className="text-xs text-slate-500">Balance</p><p className="font-medium">{formatCurrency(selectedUser.balance)}</p></div><div><p className="text-xs text-slate-500">Plan</p><p className="font-medium">{selectedUser.activePlan?.plan.name || "None"}</p></div><div><p className="text-xs text-slate-500">Registered</p><p className="font-medium">{new Date(selectedUser.registrationDate).toLocaleDateString("en-PK")}</p></div><div><p className="text-xs text-slate-500">Referrer</p><p className="font-medium">{selectedUser.referrer?.username || "None"}</p></div></div></div>}

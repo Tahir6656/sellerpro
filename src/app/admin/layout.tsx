@@ -18,6 +18,7 @@ import {
   KeyRound,
   GitBranch,
   MessageSquare,
+  CircleDollarSign,
 } from "lucide-react";
 
 const navItems = [
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
   { href: "/admin/withdrawals", label: "Withdrawals", icon: Wallet },
+  { href: "/admin/income", label: "Income", icon: CircleDollarSign },
   { href: "/admin/plans", label: "Plans", icon: Layers },
   { href: "/admin/payment-accounts", label: "Payment Accounts", icon: Shield },
   { href: "/admin/referrals", label: "Referrals", icon: GitBranch },
