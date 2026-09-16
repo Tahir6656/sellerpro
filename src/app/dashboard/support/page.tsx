@@ -32,6 +32,8 @@ export default function SupportPage() {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [conversationSearch, setConversationSearch] = useState("");
+  const [conversationFilter, setConversationFilter] = useState<"ALL" | "OPEN" | "CLOSED">("ALL");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const loadConversations = async () => {
@@ -60,6 +62,11 @@ export default function SupportPage() {
   }, []);
 
   const selected = conversations.find((conversation) => conversation.id === selectedId);
+  const visibleConversations = conversations.filter((conversation) => {
+    const matchesStatus = conversationFilter === "ALL" || conversation.status === conversationFilter;
+    const matchesSearch = !conversationSearch || conversation.subject.toLowerCase().includes(conversationSearch.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -133,10 +140,11 @@ export default function SupportPage() {
             </div>
             <MessageCircle className="h-5 w-5 text-blue-600" />
           </div>
+          <div className="space-y-2 border-b border-blue-100 p-3"><input value={conversationSearch} onChange={(event) => setConversationSearch(event.target.value)} placeholder="Search conversations" aria-label="Search conversations" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500" /><select value={conversationFilter} onChange={(event) => setConversationFilter(event.target.value as "ALL" | "OPEN" | "CLOSED")} aria-label="Filter conversations" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-500"><option value="ALL">All conversations</option><option value="OPEN">Open</option><option value="CLOSED">Closed</option></select></div>
           <div className="max-h-52 space-y-2 overflow-y-auto p-3 lg:max-h-[calc(680px-73px)]">
             {loading ? <p className="p-3 text-sm text-slate-500">Loading conversations...</p> : conversations.length === 0 ? (
               <div className="p-3 text-center text-sm text-slate-500">No conversations yet.</div>
-            ) : conversations.map((conversation) => (
+            ) : visibleConversations.length === 0 ? <div className="p-3 text-center text-sm text-slate-500">No matching conversations.</div> : visibleConversations.map((conversation) => (
               <button key={conversation.id} type="button" onClick={() => setSelectedId(conversation.id)} className={`w-full rounded-2xl border p-3 text-left transition-all ${selectedId === conversation.id ? "border-blue-300 bg-white shadow-sm" : "border-transparent hover:border-blue-100 hover:bg-white"}`}>
                 <div className="flex items-start justify-between gap-2">
                   <p className="truncate text-sm font-semibold text-slate-800">{conversation.subject}</p>

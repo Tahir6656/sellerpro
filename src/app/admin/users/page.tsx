@@ -5,6 +5,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
+import Modal from "@/components/ui/Modal";
 
 interface User {
   id: string;
@@ -27,16 +28,21 @@ export default function AdminUsersPage() {
   const [adjustmentAmounts, setAdjustmentAmounts] = useState<Record<string, string>>({});
   const [adjustmentReasons, setAdjustmentReasons] = useState<Record<string, string>>({});
   const [adjustingUserId, setAdjustingUserId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const fetchUsers = async (q?: string) => {
-    const params = q ? `?search=${encodeURIComponent(q)}` : "";
+    const query = new URLSearchParams();
+    if (q) query.set("search", q);
+    if (statusFilter) query.set("status", statusFilter);
+    const params = query.toString() ? `?${query.toString()}` : "";
     const res = await fetch(`/api/admin/users${params}`);
     const json = await res.json();
     if (json.success) setUsers(json.data);
     setLoading(false);
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(); }, [statusFilter]);
 
   const handleAction = async (userId: string, action: string) => {
     const res = await fetch("/api/admin/users", {
@@ -85,8 +91,9 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Input placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} className="!py-2" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter users by status" className="rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="">All statuses</option><option value="ACTIVE">Active</option><option value="FROZEN">Frozen</option><option value="DEACTIVATED">Deactivated</option></select>
           <Button size="sm" onClick={() => fetchUsers(search)}>Search</Button>
         </div>
       </div>
@@ -109,7 +116,7 @@ export default function AdminUsersPage() {
               {users.map((u) => (
                 <tr key={u.id} className="border-b border-slate-50">
                   <td className="py-3 pr-4">
-                    <p className="font-medium">{u.username}</p>
+                    <button type="button" onClick={() => setSelectedUser(u)} className="font-medium text-left text-blue-700 hover:underline">{u.username}</button>
                     <p className="text-xs text-slate-400">{u.id.slice(0, 8)}</p>
                   </td>
                   <td className="py-3 pr-4">
@@ -175,6 +182,9 @@ export default function AdminUsersPage() {
           {loading && <p className="text-center py-8 text-slate-500">Loading...</p>}
         </div>
       </Card>
+      <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="User details" size="md">
+        {selectedUser && <div className="space-y-4 text-sm"><div className="flex items-center gap-3 rounded-2xl bg-blue-50 p-4"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-lg font-bold text-white">{selectedUser.username.slice(0, 1).toUpperCase()}</div><div><p className="text-lg font-bold text-slate-900">{selectedUser.username}</p><p className="text-slate-500">{selectedUser.accountStatus}</p></div></div><div className="grid grid-cols-2 gap-3"><div><p className="text-xs text-slate-500">Email</p><p className="font-medium">{selectedUser.email}</p></div><div><p className="text-xs text-slate-500">Mobile</p><p className="font-medium">{selectedUser.mobile}</p></div><div><p className="text-xs text-slate-500">Balance</p><p className="font-medium">{formatCurrency(selectedUser.balance)}</p></div><div><p className="text-xs text-slate-500">Plan</p><p className="font-medium">{selectedUser.activePlan?.plan.name || "None"}</p></div><div><p className="text-xs text-slate-500">Registered</p><p className="font-medium">{new Date(selectedUser.registrationDate).toLocaleDateString("en-PK")}</p></div><div><p className="text-xs text-slate-500">Referrer</p><p className="font-medium">{selectedUser.referrer?.username || "None"}</p></div></div></div>}
+      </Modal>
     </div>
   );
 }
