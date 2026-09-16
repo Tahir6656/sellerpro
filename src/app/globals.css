@@ -126,6 +126,45 @@ body {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 45%);
 }
 
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead tr {
+  background: linear-gradient(90deg, #f7faff, #eff6ff);
+}
+
+thead th {
+  color: #52627a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  text-transform: uppercase;
+}
+
+tbody tr {
+  transition: background-color 180ms ease;
+}
+
+tbody tr:hover {
+  background: #f8fbff;
+}
+
+textarea {
+  background: rgba(248, 250, 252, 0.8);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+textarea:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  outline: none;
+}
+
 /* Force readable text inside white cards */
 .auth-form-card label,
 .auth-form-card p {

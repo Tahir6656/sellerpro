@@ -54,9 +54,10 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-500 mt-1">Manage your account</p>
+      <div className="rounded-3xl bg-slate-900 px-6 py-7 text-white shadow-xl shadow-slate-900/10 lg:px-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Account center</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-slate-300">Manage your account and review your account activity.</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

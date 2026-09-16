@@ -23,7 +23,7 @@ function TreeView({ nodes, depth = 0 }: { nodes: TreeNode[]; depth?: number }) {
       {nodes.map((node) => (
         <li key={node.id} className="py-2">
           <div className="flex items-center gap-2 text-sm">
-            {node.isEligible ? (
+            {node.planStatus === "APPROVED" ? (
               <CheckCircle className="w-4 h-4 text-blue-500" />
             ) : (
               <XCircle className="w-4 h-4 text-red-400" />
@@ -65,9 +65,10 @@ export default function ReferralsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Referrals</h1>
-        <p className="text-slate-500 mt-1">Share your link and earn rewards</p>
+      <div className="rounded-3xl bg-slate-900 px-6 py-7 text-white shadow-xl shadow-slate-900/10 lg:px-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Partner network</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">Referrals</h1>
+        <p className="mt-1 text-sm text-slate-300">Share your link, grow your network, and track eligible rewards.</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

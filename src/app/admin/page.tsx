@@ -36,22 +36,23 @@ export default function AdminDashboard() {
 
   const cards = stats ? [
     { label: "Total Users", value: stats.totalUsers, icon: Users, color: "bg-blue-500" },
-    { label: "Active Users", value: stats.activeUsers, icon: Users, color: "bg-emerald-500" },
+    { label: "Active Users", value: stats.activeUsers, icon: Users, color: "bg-blue-500" },
     { label: "Frozen Users", value: stats.frozenUsers, icon: Users, color: "bg-amber-500" },
     { label: "Deactivated", value: stats.deactivatedUsers, icon: Users, color: "bg-red-500" },
-    { label: "Active Plans", value: stats.activePlans, icon: Layers, color: "bg-teal-500" },
+    { label: "Active Plans", value: stats.activePlans, icon: Layers, color: "bg-cyan-600" },
     { label: "Pending Plans", value: stats.pendingPlans, icon: Layers, color: "bg-orange-500" },
     { label: "Pending Deposits", value: stats.pendingDeposits, icon: CreditCard, color: "bg-indigo-500" },
-    { label: "Pending Withdrawals", value: stats.pendingWithdrawals, icon: Wallet, color: "bg-purple-500" },
+    { label: "Pending Withdrawals", value: stats.pendingWithdrawals, icon: Wallet, color: "bg-indigo-600" },
     { label: "Total Referrals", value: stats.totalReferrals, icon: GitBranch, color: "bg-cyan-500" },
     { label: "Password Resets", value: stats.pendingPasswordResets, icon: KeyRound, color: "bg-pink-500" },
   ] : [];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-        <p className="text-slate-500 mt-1">
+      <div className="rounded-3xl bg-slate-900 px-6 py-7 text-white shadow-xl shadow-slate-900/10 lg:px-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Operations overview</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-300">
           Total user balance: {formatCurrency(stats?.totalBalance || 0)}
         </p>
       </div>

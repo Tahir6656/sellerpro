@@ -12,34 +12,61 @@ interface TreeNode {
   username: string;
   accountStatus: string;
   planStatus: string;
+  referrerId: string | null;
   isVerified: boolean;
   isEligible: boolean;
   rewardPaid: boolean;
   children: TreeNode[];
 }
 
-async function buildAdminTree(userId: string, depth = 0): Promise<TreeNode[]> {
-  if (depth > 5) return [];
-  const referrals = await prisma.user.findMany({
-    where: { referrerId: userId },
-    include: { activePlan: true, referredVerifications: true },
+async function buildAdminForest(): Promise<TreeNode[]> {
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      username: true,
+      role: true,
+      accountStatus: true,
+      referrerId: true,
+      activePlan: { select: { status: true } },
+      referredVerifications: { select: { isVerified: true, rewardPaid: true } },
+    },
+    orderBy: { username: "asc" },
   });
 
-  const nodes: TreeNode[] = [];
-  for (const ref of referrals) {
-    const v = ref.referredVerifications;
-    nodes.push({
-      id: ref.id,
-      username: ref.username,
-      accountStatus: ref.accountStatus,
-      planStatus: ref.activePlan?.status || "NONE",
-      isVerified: v?.isVerified || false,
-      isEligible: v?.isVerified === true && ref.activePlan?.status === "APPROVED",
-      rewardPaid: v?.rewardPaid || false,
-      children: await buildAdminTree(ref.id, depth + 1),
+  const nodes = new Map<string, TreeNode>();
+  for (const user of users) {
+    const verification = user.referredVerifications;
+    nodes.set(user.id, {
+      id: user.id,
+      username: user.username,
+      accountStatus: user.accountStatus,
+      planStatus: user.activePlan?.status || "NONE",
+      referrerId: user.referrerId,
+      isVerified: verification?.isVerified || false,
+      isEligible: verification?.isVerified === true && user.activePlan?.status === "APPROVED",
+      rewardPaid: verification?.rewardPaid || false,
+      children: [],
     });
   }
-  return nodes;
+
+  const roots: TreeNode[] = [];
+  for (const user of users) {
+    const node = nodes.get(user.id);
+    const parent = user.referrerId ? nodes.get(user.referrerId) : undefined;
+    if (node && parent) parent.children.push(node);
+    else if (node && user.role !== "ADMIN") roots.push(node);
+  }
+
+  return roots;
+}
+
+function findTreeNode(nodes: TreeNode[], userId: string): TreeNode | undefined {
+  for (const node of nodes) {
+    if (node.id === userId) return node;
+    const match = findTreeNode(node.children, userId);
+    if (match) return match;
+  }
+  return undefined;
 }
 
 export async function GET(request: NextRequest) {
@@ -47,9 +74,10 @@ export async function GET(request: NextRequest) {
     await requireAuth("ADMIN");
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
+    const view = searchParams.get("view");
 
     if (userId) {
-      const tree = await buildAdminTree(userId);
+      const tree = findTreeNode(await buildAdminForest(), userId)?.children || [];
       const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { id: true, username: true },
@@ -71,6 +99,10 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: "desc" },
     });
+
+    if (view === "tree") {
+      return apiSuccess({ verifications, tree: await buildAdminForest() });
+    }
 
     return apiSuccess(verifications);
   } catch (error) {
